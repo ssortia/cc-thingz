@@ -31,8 +31,8 @@ args+=("--sandbox" "read-only")
 # the overrides on, matching the documented "set to 1 to enable" semantic.
 if [ "${CODEX_NO_OVERRIDES:-}" != 1 ]; then
     args+=(
-        "-c" "model=${CODEX_MODEL:-gpt-5.4}"
-        "-c" "model_reasoning_effort=high"
+        "-c" "model=${CODEX_MODEL:-gpt-5.5}"
+        "-c" "model_reasoning_effort=xhigh"
         "-c" "stream_idle_timeout_ms=3600000"
         "-c" "project_doc=$HOME/.claude/CLAUDE.md"
         "-c" "project_doc=./CLAUDE.md"
