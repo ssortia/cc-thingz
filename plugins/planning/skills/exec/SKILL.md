@@ -53,7 +53,9 @@ Note: in `hg` repos, detect-branch.sh returns `remote/<name>` (checking `master`
 
 **hg skip**: Detect VCS with `vcs=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-vcs.sh)`. If `vcs` is `hg`, skip the worktree question and proceed in current directory. The `EnterWorktree` tool is git-only (wraps `git worktree add`) and has no hg equivalent upstream; users who want isolation in hg repos can use `hg share` manually before invoking `/exec`.
 
-Ask the user whether to run in an isolated git worktree or in the current working directory using AskUserQuestion:
+**MANDATORY: Always ask via AskUserQuestion, even in auto mode.** This is not a routine decision — the worktree choice affects whether the user can keep working in the main repo during execution, and whether their working directory gets touched. Do NOT skip, do NOT assume "current directory" because the project is small or the run looks short. Pose the question and wait for the answer.
+
+Question to ask the user via AskUserQuestion — whether to run in an isolated git worktree or in the current working directory:
 
 - **Worktree** — creates an isolated copy of the repo, all work happens there. Clean separation from the main working directory. Best for long-running plans where you want to keep working in the main repo.
 - **Current directory** — works directly in the current repo. Simpler, but blocks the working directory during execution.
