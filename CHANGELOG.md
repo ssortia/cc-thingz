@@ -4,6 +4,20 @@ This repo ships independent Claude Code plugins. Version headings use values fro
 
 Entries are sorted by plugin version date, newest first.
 
+## planning v3.9.0 - 2026-06-08
+
+### Improvements
+
+- `/planning:exec`: cut tokens and wall-clock per run. Fold the code-smells review into the phase 1 comprehensive fanout (now 6 parallel agents) instead of a separate sequential phase, removing a full agent+fixer round-trip
+- skip the final critical-only phase when nothing was committed since phase 1 ended critical-clean — it would re-review identical code
+- narrow later critical re-checks to the files the previous fixer changed plus their direct consumers, instead of re-reviewing the whole branch diff every iteration (first re-check and the standalone critical phase still use full scope)
+- read the review fanout playbook once per run instead of re-resolving it on every review iteration
+- condense the hg-skip and worktree prose in the exec skill
+
+### Other
+
+- lower default `review_iterations` 5 → 3 and `external_review_iterations` 10 → 5 (both are early-exit caps; this trims the worst-case tail without changing the common fast-converge path)
+
 ## planning v3.8.0 - 2026-06-08
 
 ### Improvements

@@ -1,7 +1,7 @@
 {
   "name": "planning",
   "description": "Structured implementation planning, interactive annotation review, and autonomous plan execution",
-  "version": "3.8.0",
+  "version": "3.9.0",
   "author": {
     "name": "Umputun"
   },
@@ -25,13 +25,13 @@
       "title": "Review iterations",
       "type": "number",
       "description": "Max fix-and-recheck cycles during internal review.",
-      "default": 5
+      "default": 3
     },
     "external_review_iterations": {
       "title": "External review iterations",
       "type": "number",
       "description": "Max iterations for external review adversarial loop. The loop exits early once an iteration finds no critical/major issues.",
-      "default": 10
+      "default": 5
     },
     "finalize_enabled": {
       "title": "Enable finalize",

@@ -23,13 +23,11 @@ For each `agent-*.meta.json` + `agent-*.jsonl` pair in the subagents directory:
 
 Group subagents by phase using the `description` field:
 - "Execute task" / "Execute Task" → Task loop
-- "QA review", "Code quality review", "Test review", "Implementation review", "Documentation review" → Review phase 1 comprehensive
+- "QA review", "Code quality review", "Test review", "Implementation review", "Documentation review", "Code smells review", "Smells analysis" → Review phase 1 comprehensive
 - "Fixer for phase 1", "Fixer phase 1 findings" → Review phase 1 fixer
 - "QA critical re-check", "Implementation critical re-check" → Review phase 1 critical re-check
-- "Code smells review", "Smells analysis" → Review phase 2 smells
-- "Fixer - smells" → Smells fixer
-- "Fixer - codex", "Codex fixer" → Review phase 3 codex fixer
-- "QA critical pass", "Implementation critical pass" → Review phase 4 critical-only
+- "Fixer - codex", "Codex fixer" → Review phase 2 codex fixer
+- "QA critical pass", "Implementation critical pass" → Review phase 3 critical-only
 - "Finalize" → Finalize
 
 A phase's parallel execution detection: if all agents within a phase have meta mtimes within ~10s of each other, mark "parallel". Otherwise "sequential" with the total spread.
@@ -65,7 +63,7 @@ Emit ONLY this markdown report — no preamble, no commentary:
 | Phase | Agents | Tokens | Wall | Mode |
 |---|---|---|---|---|
 | Task loop | 2 | 78k | 1m 56s | sequential |
-| Review phase 1 comprehensive | 5 | 198k | 9s | parallel |
+| Review phase 1 comprehensive | 6 | 198k | 9s | parallel |
 | ... |
 
 ### Branch changes (vs DEFAULT_BRANCH)
@@ -81,7 +79,7 @@ Top files by churn:
 ### Notable
 
 - Codex severity exit: <yes/no, reason>
-- Fixer iterations: phase 1: <N>, phase 4: <N>, smells: <N>, codex: <N>
+- Fixer iterations: phase 1: <N>, codex: <N>, critical: <N>
 - Final state: <completed | max-iter-hit | aborted>
 ```
 

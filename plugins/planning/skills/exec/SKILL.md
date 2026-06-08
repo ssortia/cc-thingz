@@ -25,7 +25,7 @@ The script checks project overrides, user overrides, and bundled defaults automa
 
 After reading a prompt file, replace ALL placeholders with actual values before passing to a subagent. Subagents run in fresh contexts without plugin env vars.
 
-Always substitute: `PLAN_FILE_PATH`, `PROGRESS_FILE_PATH`, `DEFAULT_BRANCH`, `${CLAUDE_PLUGIN_ROOT}` (resolve to actual absolute path), `RESOLVE_SCRIPT` (absolute path to `${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/resolve-file.sh`), `PLUGIN_DATA_DIR` (resolved `${CLAUDE_PLUGIN_DATA}` path — passed as second argument to resolve-file.sh so it can find user overrides), `USER_RULES` (resolved custom rules content from the rules loading step, or empty string if no rules found), and phase-specific values (`FINDINGS_LIST`, `REVIEW_PHASE`, `DIFF_COMMAND`).
+Always substitute: `PLAN_FILE_PATH`, `PROGRESS_FILE_PATH`, `DEFAULT_BRANCH`, `${CLAUDE_PLUGIN_ROOT}` (resolve to actual absolute path), `RESOLVE_SCRIPT` (absolute path to `${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/resolve-file.sh`), `PLUGIN_DATA_DIR` (resolved `${CLAUDE_PLUGIN_DATA}` path — passed as second argument to resolve-file.sh so it can find user overrides), `USER_RULES` (resolved custom rules content from the rules loading step, or empty string if no rules found), and phase-specific values (`FINDINGS_LIST`, `REVIEW_PHASE`, `REVIEW_SCOPE`, `DIFF_COMMAND`).
 
 ## Custom Rules Loading
 
@@ -47,11 +47,11 @@ Read the plan file. Count total Task sections (`### Task N:` or `### Iteration N
 
 Determine the default branch: `bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-branch.sh`
 
-Note: in `hg` repos, detect-branch.sh returns `remote/<name>` (checking `master`, `main`, `trunk` in that order) in modern-Mercurial repos that expose upstream default via `remote/<name>` refs, and falls back to `default` in repos that use the traditional named-branch convention instead. The external-review prompt (`prompts/codex-review.md`) and the finalize prompt (`prompts/finalizer.md`) use git-specific commands and are not VCS-translated upstream. Both phases will be skipped (see step 9 and step 11, which re-detect VCS locally). Users who want hg-native review/finalize can override via `.claude/exec-plan/prompts/codex-review.md` and `.claude/exec-plan/prompts/finalizer.md` — any `git rebase origin/DEFAULT_BRANCH` in the bundled template must be replaced with the hg equivalent in the override, e.g. `hg rebase -d remote/master` when the repo exposes remote-tracking refs, or `hg rebase -d default` when it uses the traditional named-branch convention.
+Note: in `hg` repos, detect-branch.sh returns `remote/<name>` (trying `master`/`main`/`trunk`) in modern Mercurial, falling back to `default` in traditional named-branch repos. The external-review and finalize phases are git-only and are skipped in hg (see steps 8 and 10); to enable hg-native versions, override `.claude/exec-plan/prompts/codex-review.md` and `.claude/exec-plan/prompts/finalizer.md`, replacing `git rebase origin/DEFAULT_BRANCH` with the hg equivalent (e.g. `hg rebase -d remote/master`, or `hg rebase -d default` for named-branch repos).
 
 ### Step 2. Ask about worktree isolation
 
-**hg skip**: Detect VCS with `vcs=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-vcs.sh)`. If `vcs` is `hg`, skip the worktree question and proceed in current directory. The `EnterWorktree` tool is git-only (wraps `git worktree add`) and has no hg equivalent upstream; users who want isolation in hg repos can use `hg share` manually before invoking `/exec`.
+**hg skip**: if `vcs=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-vcs.sh)` is `hg`, skip the worktree question and run in the current directory (`EnterWorktree` is git-only; hg users can `hg share` manually beforehand).
 
 First detect current branch state — run `git branch --show-current` and compare with the default branch detected earlier (from `detect-branch.sh`). Two cases:
 
@@ -101,10 +101,9 @@ For each `### Task N:` section in the plan:
 - `TaskCreate(subject="Task N: <title>", description="<checkbox items>", activeForm="Executing task N...")`
 
 Then add review tasks:
-- `TaskCreate(subject="Review phase 1: comprehensive", description="5 parallel review agents + fixer", activeForm="Running review phase 1...")`
-- `TaskCreate(subject="Review phase 2: code smells", description="smells agent + fixer", activeForm="Running smells review...")`
-- `TaskCreate(subject="Review phase 3: codex external", description="adversarial codex/claude review loop", activeForm="Running codex review...")`
-- `TaskCreate(subject="Review phase 4: critical only", description="2 review agents + fixer", activeForm="Running review phase 4...")`
+- `TaskCreate(subject="Review phase 1: comprehensive", description="6 parallel review agents (incl. code smells) + fixer", activeForm="Running review phase 1...")`
+- `TaskCreate(subject="Review phase 2: codex external", description="adversarial codex/claude review loop", activeForm="Running codex review...")`
+- `TaskCreate(subject="Review phase 3: critical only", description="2 review agents + fixer", activeForm="Running review phase 3...")`
 - `TaskCreate(subject="Finalize", description="rebase, clean up commits, verify", activeForm="Finalizing...")`
 - `TaskCreate(subject="Stats summary", description="aggregate token/duration/git stats from session log", activeForm="Summarizing stats...")`
 
@@ -151,7 +150,7 @@ Repeat until no `[ ]` checkboxes remain in any Task section:
    - If no — **retry** with a fresh subagent for the same task up to `task_retries` times (userConfig, default: 1). If all retries fail, stop and report failure to user
 7. **Report to user**: "Task N completed" (one line). The task subagent logs details to the progress file.
 
-CRITICAL: Spawn exactly ONE task subagent per iteration and WAIT for it to return before starting the next. NEVER batch-spawn multiple task subagents in a single message. Plan tasks are ordered and interdependent — later tasks build on the files earlier tasks create, and every task subagent edits the same plan-file checkboxes and overlapping source files, so running them in parallel corrupts the plan and the working tree. The "launch in a single message for parallel execution" instruction applies ONLY to the review phases (steps 7 and 10), never to this task loop.
+CRITICAL: Spawn exactly ONE task subagent per iteration and WAIT for it to return before starting the next. NEVER batch-spawn multiple task subagents in a single message. Plan tasks are ordered and interdependent — later tasks build on the files earlier tasks create, and every task subagent edits the same plan-file checkboxes and overlapping source files, so running them in parallel corrupts the plan and the working tree. The "launch in a single message for parallel execution" instruction applies ONLY to the review phases (steps 7 and 9), never to this task loop.
 
 CRITICAL: Do NOT stop the loop based on subagent return text. The ONLY condition to stop is: no `[ ]` checkboxes remain in any Task section (`### Task N:` or `### Iteration N:`). Always re-read the plan file to check.
 
@@ -161,66 +160,53 @@ Maximum iterations safety limit: 50. If reached, stop and report to user.
 
 ### Step 7. Review phase 1 — comprehensive then critical re-check
 
-After all tasks complete, run a comprehensive code review on iteration 1, then narrow to critical-only re-checks on subsequent iterations to verify the fixer's work without re-running the full heavy sweep.
+After all tasks complete, run a comprehensive code review on iteration 1 (which includes the code-smells agent), then narrow to critical-only re-checks on subsequent iterations to verify the fixer's work without re-running the full heavy sweep.
 
 Report to user: "--- Review phase 1: comprehensive ---"
 
-Loop up to `review_iterations` times (userConfig, default: 5). Track the current iteration number:
+**Read `prompts/review.md` ONCE before the loop** — resolve it through the override chain and read it from this main session. It is a playbook that tells YOU (the orchestrator) which specialist agents to fan out for the current `REVIEW_PHASE`. Reuse the in-context playbook for every iteration below AND for phase 3 (step 9) — do NOT re-resolve or re-read it per iteration. Subagents do not have Agent tool access, so the fanout MUST be initiated from the main orchestrator.
 
-1. **Read review.md as a playbook (NOT as a subagent prompt)** — resolve `prompts/review.md` through the override chain and read it from this main session. It tells YOU (the orchestrator) which specialist agents to fan out for the current `REVIEW_PHASE`. Substitute `DEFAULT_BRANCH`, `PLAN_FILE_PATH`, `PROGRESS_FILE_PATH`, `${CLAUDE_PLUGIN_ROOT}`, and `REVIEW_PHASE` in the resolved content. Then follow the playbook FROM THIS SESSION: launch the specified Agent tool calls in a single message for parallel execution. Subagents do not have Agent tool access, so the fanout MUST be initiated from the main orchestrator.
-   - **Iteration 1**: set `REVIEW_PHASE` to `comprehensive`. Per the playbook, launch 5 parallel review agents (quality, implementation, testing, simplification, documentation).
-   - **Iteration 2 and later**: set `REVIEW_PHASE` to `critical`. Per the playbook, launch 2 parallel review agents (quality, implementation) focused on critical/major issues only. Before this iteration, report to user: "--- Review phase 1: critical re-check (iteration N) ---"
+Loop up to `review_iterations` times (userConfig, default: 3). Track the current iteration number. Each iteration, substitute `DEFAULT_BRANCH`, `PLAN_FILE_PATH`, `PROGRESS_FILE_PATH`, `${CLAUDE_PLUGIN_ROOT}`, `REVIEW_PHASE`, and (for narrowed re-checks) `REVIEW_SCOPE` in the playbook, then follow it FROM THIS SESSION: launch the specified Agent calls in a single message for parallel execution.
+
+1. **Launch the review agents per the playbook:**
+   - **Iteration 1**: `REVIEW_PHASE` = `comprehensive`. Launch 6 parallel review agents (quality, implementation, testing, simplification, documentation, smells).
+   - **Iteration 2**: `REVIEW_PHASE` = `critical`, `REVIEW_SCOPE` = full. Launch 2 parallel agents (quality, implementation) on critical/major issues across the whole branch diff. Before launching, report: "--- Review phase 1: critical re-check (iteration 2) ---".
+   - **Iteration 3 and later**: `REVIEW_PHASE` = `critical`, `REVIEW_SCOPE` = narrowed. Determine the files the previous iteration's fixer changed (`git diff --name-only HEAD~1`; if the previous fixer made no commit, fall back to full scope) and pass them as the narrowed scope — the agents review those files PLUS direct consumers of any changed symbol. Before launching, report: "--- Review phase 1: critical re-check (iteration N) ---".
 
 2. **Collect findings** — collect findings from ALL launched review agents. Pass the COMPLETE output (not a summary) to the fixer. Do NOT summarize, filter, or dismiss any findings. ALL findings are actionable. Report to user with a short list of findings. Log to progress file:
    `bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/append-progress.sh <progress-file> "review phase 1: findings"`
    Then pipe: `echo "<findings>" | bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/append-progress.sh <progress-file>`
 
-3. **If ALL agents reported zero issues** → report "Review phase 1: clean" and proceed to the next phase.
+3. **If ALL agents reported zero issues** → report "Review phase 1: clean", set `PHASE1_CLEAN = true`, and exit the loop.
 
 4. **Spawn a fixer agent** — resolve `prompts/fixer.md` through the override chain. Launch with `mode: "bypassPermissions"`, `subagent_type: "general-purpose"`. Pass the FULL unedited review output as FINDINGS_LIST — the fixer decides what's real, not you.
 
 5. **After fixer returns** → show the "FIXES:" section to the user. Report "Review phase 1: iteration N fixes applied". Loop back to step 1.
 
-If `review_iterations` reached with issues still found, report "Review phase 1: max iterations reached, moving on" and continue.
+If `review_iterations` reached with issues still found, report "Review phase 1: max iterations reached, moving on" and set `PHASE1_CLEAN = false`.
 
-### Step 8. Review phase 2 — code smells
+**After the loop** (git repos only): record the current commit for the phase-3 gate — run `git rev-parse HEAD` and store it as `POST_PHASE1_SHA`. (In hg, leave it unset.)
 
-Report to user: "--- Review phase 2: code smells analysis ---"
+### Step 8. Review phase 2 — codex external review
 
-Run once (no loop):
+**hg skip**: if `vcs=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-vcs.sh)` is `hg`, skip this step. Report: "hg detected — skipping external review (git-only); override `prompts/codex-review.md` to enable hg-native review." Proceed to step 9.
 
-1. **Spawn a smells agent** — resolve `agents/smells.txt` through the override chain. Launch one Agent tool call with `mode: "bypassPermissions"`, `subagent_type: "general-purpose"`, and the resolved agent prompt.
+Report to user: "--- Review phase 2: codex external review ---"
 
-2. **Collect findings** — after the agent returns, report to user with a compact list of findings (one line per finding). Log findings to progress file:
-   `bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/append-progress.sh <progress-file> "review phase 2: findings"`
-   Then pipe the findings: `echo "<findings>" | bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/append-progress.sh <progress-file>`
-
-3. **If no issues found** → report "Smells analysis: clean" and proceed to the next phase.
-
-4. **Spawn a fixer agent** — resolve `prompts/fixer.md` through the override chain. Launch with `mode: "bypassPermissions"`, `subagent_type: "general-purpose"`. Pass the FULL smells output as FINDINGS_LIST.
-
-5. **After fixer returns** → report fixes to user. Proceed to the next phase.
-
-### Step 9. Review phase 3 — codex external review
-
-**hg skip**: Detect VCS with `vcs=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-vcs.sh)`. If `vcs` is `hg`, skip this entire step. Report to user: "hg detected — skipping external review (git-only). Override `prompts/codex-review.md` via `.claude/exec-plan/` to enable hg-native review." Proceed directly to step 10.
-
-Report to user: "--- Review phase 3: codex external review ---"
-
-Adversarial loop: codex reviews the code, fixer evaluates and fixes, codex re-reviews. The loop exits early once an iteration produces no `CRITICAL` or `MAJOR` findings — minor-only iterations still get fixed by the fixer, but no further codex round-trip happens. Subsequent phases (smells, critical-only) act as the final safety net.
+Adversarial loop: codex reviews the code, fixer evaluates and fixes, codex re-reviews. The loop exits early once an iteration produces no `CRITICAL` or `MAJOR` findings — minor-only iterations still get fixed by the fixer, but no further codex round-trip happens. Subsequent phases (critical-only) act as the final safety net.
 
 Determine the external review command:
 - If `external_review_cmd` userConfig is set, use that command
 - Else check if codex is available: `which codex`
-- If neither is available, report "External review: skipped (no external tool available)" and proceed to step 10
+- If neither is available, report "External review: skipped (no external tool available)" and proceed to step 9
 
-Loop up to `external_review_iterations` times (userConfig, default: 10):
+Loop up to `external_review_iterations` times (userConfig, default: 5):
 
 1. **Resolve the codex prompt** — read `prompts/codex-review.md` through the override chain. Replace `DIFF_COMMAND` using `vcs=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-vcs.sh)`: for `git`, iteration 1 is `git diff DEFAULT_BRANCH...HEAD` and subsequent iterations are `git diff`; for `hg`, iteration 1 is `hg diff -r 'ancestor(., DEFAULT_BRANCH)'` and subsequent iterations are `hg diff`. Also replace `PLAN_FILE_PATH` (so codex can read the plan for intent) and `PROGRESS_FILE_PATH` (so codex can read prior review iterations and fixer responses and avoid re-reporting fixed issues).
 
 2. **Run codex** — `bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/run-codex.sh "<resolved prompt>"` with `run_in_background: true`. You will be notified when done — do NOT poll or sleep.
 
-3. **Check codex output** — if codex reports "NO ISSUES FOUND" or equivalent, phase is done. Proceed to step 10.
+3. **Check codex output** — if codex reports "NO ISSUES FOUND" or equivalent, phase is done. Proceed to step 9.
 
 4. **Classify severity** — scan the codex output for `CRITICAL` or `MAJOR` markers (case-insensitive whole-word match). Set `has_blocking = true` if either is present, otherwise `has_blocking = false`. Findings without an explicit severity tag are treated as MINOR — `has_blocking` stays false in that case.
 
@@ -231,20 +217,22 @@ Loop up to `external_review_iterations` times (userConfig, default: 10):
 7. **Report fixer results to user** — show FIXES section. Log to progress file.
 
 8. **Decide whether to loop**:
-   - If `has_blocking` is false → report "Codex review: only minor findings — fixes applied, stopping loop" and proceed to step 10.
+   - If `has_blocking` is false → report "Codex review: only minor findings — fixes applied, stopping loop" and proceed to step 9.
    - Otherwise → loop back to step 1.
 
 If `external_review_iterations` reached with critical/major issues still found, report "Codex review: max iterations reached, moving on" and continue.
 
-### Step 10. Review phase 4 — critical only
+### Step 9. Review phase 3 — critical only
 
-Report to user: "--- Review phase 4: critical/major only (single pass) ---"
+**Gate (git only)** — skip this phase if nothing changed since phase 1: if `POST_PHASE1_SHA` is set, run `git rev-parse HEAD`. If it equals `POST_PHASE1_SHA` (no fixer committed during phase 2) AND `PHASE1_CLEAN` is true, skip — report "Review phase 3: skipped (no changes since phase 1 critical-clean)" and proceed to step 10.
 
-Same structure as step 7 but with `REVIEW_PHASE` set to `critical`. Resolve `prompts/review.md` and follow its playbook FROM THIS MAIN SESSION — launch 2 parallel review agents (quality, implementation) focusing on critical/major issues only. Subagents do not have Agent tool access, so the fanout MUST be initiated from the main orchestrator. Same fixer flow — pass findings to fixer, show FIXES to user.
+Report to user: "--- Review phase 3: critical/major only (single pass) ---"
 
-### Step 11. Finalize
+Reuse the `prompts/review.md` playbook already read in step 7 (do NOT re-read it). Set `REVIEW_PHASE` = `critical` and `REVIEW_SCOPE` = full, and follow its playbook FROM THIS MAIN SESSION — launch 2 parallel review agents (quality, implementation) focusing on critical/major issues only. Subagents do not have Agent tool access, so the fanout MUST be initiated from the main orchestrator. Same fixer flow — pass findings to fixer, show FIXES to user.
 
-**hg skip**: Detect VCS with `vcs=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-vcs.sh)`. If `vcs` is `hg`, skip this entire step. Report to user: "hg detected — skipping finalize (git-only). Override `prompts/finalizer.md` via `.claude/exec-plan/` to enable hg-native finalize." Note that `DEFAULT_BRANCH` substitutes as whatever detect-branch.sh returned — `remote/master` (or `remote/main`/`remote/trunk`) in modern-Mercurial repos that expose remote-tracking refs, `default` in repos that use the traditional named-branch convention — so any `git rebase origin/DEFAULT_BRANCH` in the bundled template must be replaced with the hg equivalent (e.g. `hg rebase -d remote/master`, or `hg rebase -d default` in the named-branch case) in the override. Proceed directly to step 12.
+### Step 10. Finalize
+
+**hg skip**: if `vcs=$(bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/detect-vcs.sh)` is `hg`, skip this step. Report: "hg detected — skipping finalize (git-only); override `prompts/finalizer.md` to enable hg-native finalize (replace `git rebase origin/DEFAULT_BRANCH` with the hg equivalent, e.g. `hg rebase -d remote/master` or `hg rebase -d default`)." Proceed to step 11.
 
 Check `finalize_enabled` userConfig (default: true). If false, skip this step.
 
@@ -256,9 +244,9 @@ Spawn one Agent tool call with `mode: "bypassPermissions"`, `subagent_type: "gen
 
 This is best-effort — if rebase fails, report the issue but don't block completion.
 
-### Step 12. Stats summary
+### Step 11. Stats summary
 
-After finalize (or after step 11 was skipped on hg/disabled), spawn one Agent tool call with `mode: "bypassPermissions"`, `subagent_type: "general-purpose"`, and the prompt from `prompts/stats.md`. Replace `DEFAULT_BRANCH` and `PROGRESS_FILE_PATH` in the resolved content.
+After finalize (or after step 10 was skipped on hg/disabled), spawn one Agent tool call with `mode: "bypassPermissions"`, `subagent_type: "general-purpose"`, and the prompt from `prompts/stats.md`. Replace `DEFAULT_BRANCH` and `PROGRESS_FILE_PATH` in the resolved content.
 
 The stats agent reads this session's main log + subagent logs from `~/.claude/projects/<cwd-encoded>/`, aggregates per-phase token/duration/tool-use counts, runs `git diff --shortstat DEFAULT_BRANCH...HEAD` for branch churn, and returns a compact markdown report.
 
@@ -266,7 +254,7 @@ Show the stats agent's full markdown output to the user verbatim. Do NOT summari
 
 This step is best-effort — if the stats agent fails or the session log path can't be resolved, report the failure but do not block completion.
 
-### Step 13. Completion
+### Step 12. Completion
 
 When stats summary is done (or skipped on failure):
 - Log completion to progress file: `bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/append-progress.sh <progress-file> "completed"`
