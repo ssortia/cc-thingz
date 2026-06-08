@@ -1,12 +1,12 @@
 # cc-thingz
 
-Things to make [Claude Code](https://claude.ai/code) even better — hooks, skills, and commands, organized as a marketplace of independent plugins.
+Вещи, которые делают [Claude Code](https://claude.ai/code) ещё лучше — хуки, навыки и команды, организованные как marketplace независимых плагинов.
 
-This is an unapologetically opinionated set. Every skill here is something I actually use — some multiple times a day (brainstorm, plan, review), others less often but worth having in the toolbox. There are plenty of plugin collections out there, from random grab-bags to well-organized catalogs. This one is mine, and it reflects how I work. Even if you don't need my particular toolbox, it might give you ideas for building your own and making Claude Code do what you want it to do.
+Это откровенно субъективный набор. Каждый навык здесь — то, чем я реально пользуюсь: чем-то по нескольку раз в день (brainstorm, plan, review), чем-то реже, но это стоит держать под рукой. Существует масса коллекций плагинов — от случайной мешанины до аккуратно организованных каталогов. Эта — моя, и она отражает то, как я работаю. Даже если вам не нужен именно мой набор инструментов, он может подсказать идеи для создания собственного и для того, чтобы заставить Claude Code делать то, что нужно вам.
 
-## Install
+## Установка
 
-Add the marketplace, then install the plugins you want:
+Добавьте marketplace, затем установите нужные плагины:
 
     /plugin marketplace add umputun/cc-thingz
 
@@ -18,25 +18,25 @@ Add the marketplace, then install the plugins you want:
     /plugin install skill-eval@umputun-cc-thingz
     /plugin install workflow@umputun-cc-thingz
 
-Test a plugin locally:
+Протестировать плагин локально:
 
     claude --plugin-dir plugins/brainstorm
 
 <details>
-<summary>Manual install (alternative)</summary>
+<summary>Ручная установка (альтернатива)</summary>
 
-Copy the files you want to your Claude Code config directory manually.
+Скопируйте нужные файлы в каталог конфигурации Claude Code вручную.
 
-**brainstorm** — skill:
+**brainstorm** — навык:
 ```bash
 cp -r plugins/brainstorm/skills/brainstorm ~/.claude/skills/
 cp -r plugins/brainstorm/scripts/ ~/.claude/skills/brainstorm/scripts
 cp -r plugins/brainstorm/references/ ~/.claude/skills/brainstorm/references
 ```
 
-Note: when installed manually, update `${CLAUDE_PLUGIN_ROOT}` references inside `brainstorm/SKILL.md` to use `~/.claude/skills/brainstorm` instead.
+Примечание: при ручной установке обновите ссылки `${CLAUDE_PLUGIN_ROOT}` внутри `brainstorm/SKILL.md`, заменив их на `~/.claude/skills/brainstorm`.
 
-**review** — skills (review-pr + git-review + writing-style):
+**review** — навыки (review-pr + git-review + writing-style):
 ```bash
 cp -r plugins/review/skills/pr ~/.claude/skills/
 cp -r plugins/review/skills/git-review ~/.claude/skills/
@@ -44,9 +44,9 @@ cp -r plugins/review/skills/writing-style ~/.claude/skills/
 chmod +x ~/.claude/skills/git-review/scripts/git-review.py
 ```
 
-Note: update the `/review:writing-style` reference inside `pr/SKILL.md` to `/writing-style` when installed manually.
+Примечание: при ручной установке обновите ссылку `/review:writing-style` внутри `pr/SKILL.md` на `/writing-style`.
 
-**planning** — command + exec skill + hook:
+**planning** — команда + навык exec + хук:
 ```bash
 cp plugins/planning/commands/make.md ~/.claude/commands/
 cp -r plugins/planning/skills/exec ~/.claude/skills/
@@ -57,9 +57,9 @@ chmod +x ~/.claude/scripts/plan-annotate.py
 chmod +x ~/.claude/skills/exec/scripts/*.sh
 ```
 
-Note: when installed manually, update `${CLAUDE_PLUGIN_ROOT}` references inside `exec/SKILL.md`, `make.md`, and prompt files to use the appropriate local paths instead.
+Примечание: при ручной установке обновите ссылки `${CLAUDE_PLUGIN_ROOT}` внутри `exec/SKILL.md`, `make.md` и файлов промптов на соответствующие локальные пути.
 
-Add the plan-annotate hook to `~/.claude/settings.json`:
+Добавьте хук plan-annotate в `~/.claude/settings.json`:
 ```json
 {
   "hooks": {
@@ -75,27 +75,27 @@ Add the plan-annotate hook to `~/.claude/settings.json`:
 }
 ```
 
-**release-tools** — skills + scripts:
+**release-tools** — навыки + скрипты:
 ```bash
 cp -r plugins/release-tools/skills/new ~/.claude/skills/
 cp -r plugins/release-tools/skills/last-tag ~/.claude/skills/
 chmod +x ~/.claude/skills/release/scripts/*.sh
 ```
 
-**thinking-tools** — skills:
+**thinking-tools** — навыки:
 ```bash
 cp -r plugins/thinking-tools/skills/ask-codex ~/.claude/skills/
 cp -r plugins/thinking-tools/skills/dialectic ~/.claude/skills/
 cp -r plugins/thinking-tools/skills/root-cause-investigator ~/.claude/skills/
 ```
 
-**skill-eval** — hook:
+**skill-eval** — хук:
 ```bash
 cp plugins/skill-eval/hooks/skill-forced-eval-hook.sh ~/.claude/scripts/
 chmod +x ~/.claude/scripts/skill-forced-eval-hook.sh
 ```
 
-Add the skill-eval hook to `~/.claude/settings.json`:
+Добавьте хук skill-eval в `~/.claude/settings.json`:
 ```json
 {
   "hooks": {
@@ -109,7 +109,7 @@ Add the skill-eval hook to `~/.claude/settings.json`:
 }
 ```
 
-**workflow** — skills:
+**workflow** — навыки:
 ```bash
 cp -r plugins/workflow/skills/learn ~/.claude/skills/
 cp -r plugins/workflow/skills/clarify ~/.claude/skills/
@@ -118,253 +118,253 @@ cp -r plugins/workflow/skills/md-copy ~/.claude/skills/
 cp -r plugins/workflow/skills/txt-copy ~/.claude/skills/
 ```
 
-Restart Claude Code for changes to take effect.
+Перезапустите Claude Code, чтобы изменения вступили в силу.
 
 </details>
 
-## Updating plugins
+## Обновление плагинов
 
-The `/plugin` menu has two update paths, and they behave differently:
+В меню `/plugin` есть два пути обновления, и ведут они себя по-разному:
 
-- `/plugin` → **Marketplaces** → **Update marketplace** — pulls the latest plugin catalog from the repo immediately. This is the reliable way to get updates.
-- `/plugin` → **Installed** → **Update now** — uses a local cache that can be stale for a long time and may not reflect recent changes. Use this as a fallback after updating the marketplace.
+- `/plugin` → **Marketplaces** → **Update marketplace** — немедленно подтягивает свежий каталог плагинов из репозитория. Это надёжный способ получить обновления.
+- `/plugin` → **Installed** → **Update now** — использует локальный кеш, который может долго оставаться устаревшим и не отражать недавние изменения. Используйте как запасной вариант после обновления marketplace.
 
-To keep plugins current automatically, enable `/plugin` → **Marketplaces** → **Enable auto-update**. This updates the marketplace catalog on each session start.
+Чтобы плагины обновлялись автоматически, включите `/plugin` → **Marketplaces** → **Enable auto-update**. Это обновляет каталог marketplace при каждом старте сессии.
 
-## Plugins
+## Плагины
 
-| Plugin | Description |
+| Плагин | Описание |
 |--------|-------------|
-| [brainstorm](#brainstorm) | Collaborative design dialogue — idea to approaches to design to plan |
-| [review](#review) | PR review + interactive git diff annotation review + writing style guide |
-| [planning](#planning) | Structured implementation planning, interactive annotation review, and autonomous plan execution |
-| [release-tools](#release-tools) | Release workflow — auto-versioning, release notes, changelog |
-| [thinking-tools](#thinking-tools) | Analytical thinking — dialectic analysis, root cause investigation, codex consultation |
-| [skill-eval](#skill-eval) | Forces skill evaluation before every response |
-| [workflow](#workflow) | Session helpers — knowledge capture, confusion handling, clipboard copy |
+| [brainstorm](#brainstorm) | Совместный диалог по проектированию — от идеи к подходам, дизайну и плану |
+| [review](#review) | Ревью PR + интерактивное ревью аннотаций git diff + руководство по стилю письма |
+| [planning](#planning) | Структурированное планирование реализации, интерактивное ревью аннотаций и автономное исполнение плана |
+| [release-tools](#release-tools) | Рабочий процесс релизов — авто-версионирование, заметки о релизе, changelog |
+| [thinking-tools](#thinking-tools) | Аналитическое мышление — диалектический анализ, поиск первопричин, консультация с codex |
+| [skill-eval](#skill-eval) | Принудительная оценка навыков перед каждым ответом |
+| [workflow](#workflow) | Помощники сессии — фиксация знаний, обработка путаницы, копирование в буфер обмена |
 
 ### brainstorm
 
-Collaborative design skill. Invoke with `/brainstorm:do` or trigger phrases like "brainstorm", "let's brainstorm", "help me design", "explore options for", etc.
+Навык совместного проектирования. Вызывается через `/brainstorm:do` или триггерные фразы вроде «brainstorm», «let's brainstorm», «help me design», «explore options for» и т.п.
 
-| Component | Trigger | Description |
+| Компонент | Триггер | Описание |
 |-----------|---------|-------------|
-| skill | `/brainstorm:do` | Collaborative design dialogue — idea → approaches → design → plan |
+| skill | `/brainstorm:do` | Совместный диалог по проектированию — идея → подходы → дизайн → план |
 
-Guides a 4-phase dialogue to turn ideas into designs:
+Ведёт 4-фазный диалог, превращающий идеи в дизайн:
 
-1. **Understand** — gathers project context, asks questions one at a time (multiple choice preferred)
-2. **Explore Approaches** — proposes 2-3 options with trade-offs, leads with recommendation
-3. **Present Design** — breaks design into sections of 200-300 words, validates each incrementally
-4. **Next Steps** — offers to write a plan (`/planning:make`), enter plan mode, or start implementing
+1. **Понимание** — собирает контекст проекта, задаёт вопросы по одному (предпочтительно с вариантами ответа)
+2. **Изучение подходов** — предлагает 2–3 варианта с компромиссами, начиная с рекомендуемого
+3. **Презентация дизайна** — разбивает дизайн на разделы по 200–300 слов, валидирует каждый итеративно
+4. **Следующие шаги** — предлагает написать план (`/planning:make`), войти в режим плана или начать реализацию
 
 ### review
 
-PR review, interactive git diff annotation review, and writing style tools. Install together — review-pr uses writing-style for drafting comments.
+Инструменты ревью PR, интерактивного ревью аннотаций git diff и стиля письма. Устанавливайте вместе — review-pr использует writing-style для составления комментариев.
 
-| Component | Trigger | Description |
+| Компонент | Триггер | Описание |
 |-----------|---------|-------------|
-| skill | `/review:pr <number>` | PR review with architecture analysis, scope creep detection, and merge workflow |
-| skill | `/review:git-review [ref]` | Interactive git diff annotation review — editor overlay with feedback loop |
-| skill | `/review:writing-style` | Direct technical communication — anti-AI-speak, brevity, no filler |
+| skill | `/review:pr <number>` | Ревью PR с анализом архитектуры, выявлением расползания скоупа и рабочим процессом слияния |
+| skill | `/review:git-review [ref]` | Интерактивное ревью аннотаций git diff — оверлей в редакторе с циклом обратной связи |
+| skill | `/review:writing-style` | Прямая техническая коммуникация — без AI-канцелярита, кратко, без воды |
 
-**review-pr** — analyzes code quality, architecture, test coverage, and identifies scope creep:
-- **Phase 0** — detects PR vs issue (issues get a simpler comment-only flow)
-- **Phase 1** — fetches PR metadata, discussion history, merge status, and inline suggestions
-- **Phase 1.5** — asks review mode: Full (worktree + tests + linter + architecture) or Quick (diff-only)
-- **Phase 2** — sets up worktree and launches a subagent for deep analysis
-- **Phase 3-4** — presents findings, resolves open design questions
-- **Phase 5** — drafts review comment using `/review:writing-style`, posts as formal review
-- **Post-approve** — recommends merge strategy (rebase vs squash vs merge)
+**review-pr** — анализирует качество кода, архитектуру, покрытие тестами и выявляет расползание скоупа:
+- **Фаза 0** — определяет PR или issue (для issue используется более простой поток только с комментарием)
+- **Фаза 1** — получает метаданные PR, историю обсуждения, статус слияния и инлайн-предложения
+- **Фаза 1.5** — спрашивает режим ревью: Full (worktree + тесты + линтер + архитектура) или Quick (только diff)
+- **Фаза 2** — настраивает worktree и запускает субагента для глубокого анализа
+- **Фазы 3–4** — представляет результаты, разрешает открытые вопросы по дизайну
+- **Фаза 5** — составляет комментарий ревью с помощью `/review:writing-style`, публикует как официальное ревью
+- **После одобрения** — рекомендует стратегию слияния (rebase / squash / merge)
 
-Uses `gh` CLI for all GitHub operations and git worktrees to avoid disrupting the current checkout.
+Использует CLI `gh` для всех операций с GitHub и git worktree, чтобы не нарушать текущий checkout.
 
-**git-review** — interactive annotation-based code review. Generates a cleaned-up diff, opens it in `$EDITOR` via tmux popup, kitty overlay, or wezterm split-pane. You annotate directly in the diff, and the script returns your changes as a git diff. Claude reads annotations, fixes code, regenerates the diff, and loops until you close the editor without changes. Supports auto-detection of uncommitted changes or branch diffs.
+**git-review** — интерактивное ревью кода на основе аннотаций. Генерирует очищенный diff, открывает его в `$EDITOR` через tmux-попап, оверлей kitty или split-панель wezterm. Вы аннотируете прямо в diff, а скрипт возвращает ваши правки как git diff. Claude читает аннотации, исправляет код, перегенерирует diff и повторяет цикл, пока вы не закроете редактор без изменений. Поддерживает автоопределение незакоммиченных изменений или различий между ветками.
 
-Run tests: `python3 plugins/review/skills/git-review/scripts/git-review.py --test`
+Запуск тестов: `python3 plugins/review/skills/git-review/scripts/git-review.py --test`
 
-**writing-style** — enforces direct, brief writing for tickets, PRs, code reviews, and commit messages. Core principles: brevity, honest feedback, problem-solution structure, technical precision, anti-AI-speak. Does NOT apply to README.md, public docs, or blog posts.
+**writing-style** — обеспечивает прямой, краткий стиль письма для тикетов, PR, ревью кода и сообщений коммитов. Основные принципы: краткость, честная обратная связь, структура «проблема-решение», техническая точность, отсутствие AI-канцелярита. НЕ применяется к README.md, публичной документации и постам в блоге.
 
 ### planning
 
-Structured implementation planning with interactive annotation review and autonomous plan execution.
+Структурированное планирование реализации с интерактивным ревью аннотаций и автономным исполнением плана.
 
-| Component | Trigger | Description |
+| Компонент | Триггер | Описание |
 |-----------|---------|-------------|
-| command | `/planning:make <desc>` | Structured implementation plan with interactive review loop |
-| skill | `/planning:exec [plan-file]` | Autonomous plan executor — task loop, multi-phase review, optional finalize |
-| hook | `PreToolUse` / CLI | Plan annotation in `$EDITOR` with diff-based feedback loop |
-| agent | `plan-review` | Automated plan quality review — completeness, over-engineering, testing |
+| command | `/planning:make <desc>` | Структурированный план реализации с интерактивным циклом ревью |
+| skill | `/planning:exec [plan-file]` | Автономный исполнитель плана — цикл задач, многофазное ревью, опциональная финализация |
+| hook | `PreToolUse` / CLI | Аннотация плана в `$EDITOR` с циклом обратной связи на основе diff |
+| agent | `plan-review` | Автоматическое ревью качества плана — полнота, переусложнение, тестирование |
 
-**plan command** — creates a plan file in `docs/plans/yyyymmdd-<task-name>.md` through interactive context gathering:
-- **Step 0** — parses intent and explores codebase for relevant context
-- **Step 1** — asks focused questions one at a time (goal, scope, constraints, testing approach, title)
-- **Step 1.5** — proposes 2-3 implementation approaches with trade-offs (skipped if obvious)
-- **Step 2** — creates the plan file with tasks, file lists, test requirements, and progress tracking
-- **Step 3** — offers interactive review (opens plan in `$EDITOR` via plan-annotate), auto review, start implementation, or done
+**команда plan** — создаёт файл плана в `docs/plans/yyyymmdd-<task-name>.md` через интерактивный сбор контекста:
+- **Шаг 0** — разбирает намерение и исследует кодовую базу для поиска релевантного контекста
+- **Шаг 1** — задаёт контекстные вопросы одним вызовом (цель, скоуп, ограничения, подход к тестированию); заголовок выводится автоматически
+- **Шаг 1.5** — предлагает 2–3 подхода к реализации с компромиссами (пропускается, если очевидно)
+- **Шаг 2** — создаёт файл плана с задачами, списками файлов, требованиями к тестам и отслеживанием прогресса
+- **Шаг 3** — предлагает интерактивное ревью (открывает план в `$EDITOR` через plan-annotate), авто-ревью, начало реализации или завершение
 
-**plan-annotate.py** — interactive plan annotation tool. Opens plans in your `$EDITOR` via a terminal overlay (tmux popup, kitty overlay, or wezterm split-pane), lets you annotate directly, and feeds a unified diff back to Claude so it revises the plan. Two modes:
+**plan-annotate.py** — интерактивный инструмент аннотирования плана. Открывает планы в вашем `$EDITOR` через терминальный оверлей (tmux-попап, оверлей kitty или split-панель wezterm), позволяет аннотировать прямо в файле и передаёт унифицированный diff обратно Claude для пересмотра плана. Два режима:
 
-- *Hook mode* (default) — intercepts `ExitPlanMode`, opens plan in editor, denies tool call with diff if changes made, forcing revision loop
-- *File mode* (`plan-annotate.py <plan-file>`) — outputs unified diff to stdout for integration with custom workflows
+- *Режим хука* (по умолчанию) — перехватывает `ExitPlanMode`, открывает план в редакторе, отклоняет вызов инструмента с diff при наличии изменений, запуская цикл пересмотра
+- *Файловый режим* (`plan-annotate.py <plan-file>`) — выводит унифицированный diff в stdout для интеграции с пользовательскими рабочими процессами
 
-Requirements: tmux, kitty, or wezterm terminal, `$EDITOR` (defaults to `micro`). **Kitty users** must enable remote control in `kitty.conf`:
+Требования: терминал tmux, kitty или wezterm, `$EDITOR` (по умолчанию `micro`). **Пользователи kitty** должны включить удалённое управление в `kitty.conf`:
 
 ```
 allow_remote_control yes
 listen_on unix:/tmp/kitty-$KITTY_PID
 ```
 
-*Note*: when `revdiff` is installed, the `ExitPlanMode` hook and `/planning:make` interactive review both route through `launch-plan-review.sh` instead, which supports a wider set of overlays: tmux, zellij, kitty, wezterm/kaku, cmux, ghostty, iTerm2, and emacs vterm. The 3-terminal list above applies only to the `$EDITOR` fallback when revdiff is not installed.
+*Примечание*: когда установлен `revdiff`, хук `ExitPlanMode` и интерактивное ревью `/planning:make` оба направляются через `launch-plan-review.sh`, который поддерживает более широкий набор оверлеев: tmux, zellij, kitty, wezterm/kaku, cmux, ghostty, iTerm2 и emacs vterm. Список из 3 терминалов выше применяется только к запасному варианту `$EDITOR`, когда revdiff не установлен.
 
-The overlay popup size is configurable via env vars:
+Размер всплывающего оверлея настраивается через переменные окружения:
 
-| Env var | Description | Default |
+| Переменная окружения | Описание | По умолчанию |
 |---------|-------------|---------|
-| `REVDIFF_POPUP_WIDTH` | Tmux/Zellij popup width (e.g., `100%`, `80%`) | `90%` |
-| `REVDIFF_POPUP_HEIGHT` | Tmux/Zellij popup height / wezterm split percent | `90%` |
+| `REVDIFF_POPUP_WIDTH` | Ширина попапа tmux/zellij (например, `100%`, `80%`) | `90%` |
+| `REVDIFF_POPUP_HEIGHT` | Высота попапа tmux/zellij / процент split в wezterm | `90%` |
 
-Run tests: `python3 plugins/planning/hooks/plan-annotate.py --test`
+Запуск тестов: `python3 plugins/planning/hooks/plan-annotate.py --test`
 
-**plan-review agent** — automated plan quality reviewer. Analyzes plans for problem definition, solution correctness, scope creep, over-engineering, testing requirements, task granularity, and convention adherence. Used by the plan command's "Auto review" option. Outputs a structured report with severity-rated findings and an APPROVE/NEEDS REVISION verdict.
+**агент plan-review** — автоматический ревьюер качества плана. Анализирует планы на определение проблемы, корректность решения, расползание скоупа, переусложнение, требования к тестированию, гранулярность задач и соблюдение конвенций. Используется опцией «Auto review» команды plan. Выдаёт структурированный отчёт с находками по уровням серьёзности и вердиктом APPROVE/NEEDS REVISION.
 
-**exec skill** — autonomous plan executor. Takes a plan file (from `/planning:make`) and executes it task-by-task using isolated subagents. Execution phases:
+**навык exec** — автономный исполнитель плана. Берёт файл плана (от `/planning:make`) и исполняет его задача за задачей с помощью изолированных субагентов. Фазы исполнения:
 
-1. **Task loop** — one subagent per task section, commits after each, retries on failure
-2. **Comprehensive review** — 5 parallel agents (quality, implementation, testing, simplification, documentation) + fixer
-3. **Code smells** — smells agent checks conventions, CLAUDE.md rules, code style + fixer
-4. **External review** — auto-detects `codex` CLI or uses custom command, adversarial loop with severity-aware early exit (stops after the first iteration that finds no critical/major issues; minor findings are still fixed)
-5. **Critical-only review** — 2 agents (quality + implementation), critical/major issues only + fixer
-6. **Finalize** — rebase, squash, verify (optional)
-7. **Stats summary** — single agent reads the session log + git state and reports total tokens / wall-clock / per-phase breakdown / branch churn / fixer iterations
+1. **Цикл задач** — один субагент на секцию задачи, коммит после каждой, повтор при сбое
+2. **Комплексное ревью** — 5 параллельных агентов (качество, реализация, тестирование, упрощение, документация) + fixer
+3. **Запахи кода** — агент smells проверяет конвенции, правила CLAUDE.md, стиль кода + fixer
+4. **Внешнее ревью** — автоопределение CLI `codex` или использование пользовательской команды, состязательный цикл с ранним выходом по уровню серьёзности (останавливается после первой итерации, не нашедшей критических/серьёзных проблем; минорные находки всё равно исправляются)
+5. **Ревью только критичного** — 2 агента (качество + реализация), только критические/серьёзные проблемы + fixer
+6. **Финализация** — rebase, squash, проверка (опционально)
+7. **Сводка статистики** — один агент читает лог сессии + состояние git и сообщает суммарные токены / общее время / разбивку по фазам / churn веток / итерации fixer
 
-Review agents are read-only reporters. The fixer agent evaluates each finding, fixes confirmed issues, rejects false positives, and reports back.
+Агенты ревью — это reporter'ы только на чтение. Агент fixer оценивает каждую находку, исправляет подтверждённые проблемы, отклоняет ложные срабатывания и отчитывается.
 
-**VCS support** — the exec helper scripts are VCS-aware and work in both git and Mercurial (hg) repositories. The finalize and external-review phases remain git-only, but their behaviour can be customised for hg via `.claude/exec-plan/prompts/finalizer.md` and `.claude/exec-plan/prompts/codex-review.md` overrides.
+**Поддержка VCS** — вспомогательные скрипты exec учитывают VCS и работают как в git, так и в Mercurial (hg). Фазы финализации и внешнего ревью остаются только для git, но их поведение можно настроить под hg через переопределения `.claude/exec-plan/prompts/finalizer.md` и `.claude/exec-plan/prompts/codex-review.md`.
 
-**Customization** — prompts and agent definitions use a three-layer override chain (checked in order, first match wins):
-1. Project: `.claude/exec-plan/prompts/` and `.claude/exec-plan/agents/`
-2. User: `${CLAUDE_PLUGIN_DATA}/prompts/` and `${CLAUDE_PLUGIN_DATA}/agents/`
-3. Bundled defaults (shipped with the plugin)
+**Кастомизация** — промпты и определения агентов используют трёхуровневую цепочку переопределений (проверяется по порядку, побеждает первое совпадение):
+1. Проект: `.claude/exec-plan/prompts/` и `.claude/exec-plan/agents/`
+2. Пользователь: `${CLAUDE_PLUGIN_DATA}/prompts/` и `${CLAUDE_PLUGIN_DATA}/agents/`
+3. Встроенные значения по умолчанию (поставляются с плагином)
 
-To customize, place your modified version in the override path. For example, to customize `prompts/review.md` at the project level:
+Для кастомизации поместите изменённую версию в путь переопределения. Например, чтобы кастомизировать `prompts/review.md` на уровне проекта:
 ```
 .claude/exec-plan/prompts/review.md
 ```
-Or at the user level (applies to all projects). A `SessionStart` hook copies bundled defaults to `${CLAUDE_PLUGIN_DATA}` on first run — edit the copies there to customize. To find the directory, run `ls ~/.claude/plugins/data/` and look for the planning plugin entry:
+Или на уровне пользователя (применяется ко всем проектам). Хук `SessionStart` копирует встроенные значения по умолчанию в `${CLAUDE_PLUGIN_DATA}` при первом запуске — редактируйте копии там для кастомизации. Чтобы найти каталог, выполните `ls ~/.claude/plugins/data/` и найдите запись плагина planning:
 ```
 ~/.claude/plugins/data/<plugin-id>/prompts/review.md
 ```
-Same pattern works for any prompt or agent file — just mirror the path under the override directory.
+Тот же паттерн работает для любого файла промпта или агента — просто отзеркальте путь под каталогом переопределения.
 
-Bundled prompts: `task.md`, `fixer.md`, `review.md`, `codex-review.md`, `finalizer.md`, `stats.md`, `progress-file.md`
-Bundled agents: `quality.txt`, `implementation.txt`, `testing.txt`, `simplification.txt`, `documentation.txt`, `smells.txt`
+Встроенные промпты: `task.md`, `fixer.md`, `review.md`, `codex-review.md`, `finalizer.md`, `stats.md`, `progress-file.md`
+Встроенные агенты: `quality.txt`, `implementation.txt`, `testing.txt`, `simplification.txt`, `documentation.txt`, `smells.txt`
 
-**Customization patterns** — two common shapes:
+**Паттерны кастомизации** — две распространённые формы:
 
-- *Route the review fanout to named specialists.* Override `prompts/review.md` to launch named Claude Code subagents (`qa-expert`, `code-quality`, `go-test-expert`, `implementation-reviewer`, `documentation`) instead of generic `general-purpose`. The override controls the `subagent_type` for each parallel specialist.
-- *Delegate to an existing skill.* Override a prompt or agent file to instruct the spawned subagent to read another skill's `SKILL.md` and follow its workflow. Examples: override `agents/smells.txt` to delegate to a `/smells` skill; override `prompts/finalizer.md` to delegate to a `/rebase-commits` skill. Useful when an installed skill captures the workflow better than the bundled default.
+- *Направить разветвление ревью на именованных специалистов.* Переопределите `prompts/review.md`, чтобы запускать именованных субагентов Claude Code (`qa-expert`, `code-quality`, `go-test-expert`, `implementation-reviewer`, `documentation`) вместо обобщённого `general-purpose`. Переопределение управляет `subagent_type` для каждого параллельного специалиста.
+- *Делегировать существующему навыку.* Переопределите файл промпта или агента, чтобы дать указание порождённому субагенту прочитать `SKILL.md` другого навыка и следовать его рабочему процессу. Примеры: переопределить `agents/smells.txt` для делегирования навыку `/smells`; переопределить `prompts/finalizer.md` для делегирования навыку `/rebase-commits`. Полезно, когда установленный навык описывает рабочий процесс лучше встроенного значения по умолчанию.
 
-**Constraint** — subagents in current Claude Code do not have the Agent tool, so they cannot spawn other subagents. `prompts/review.md` is therefore read by the main session orchestrator directly (used as a playbook), not given to a subagent — that is how the 5-specialist fanout actually runs in parallel. Single-agent leaf work (`task.md`, `fixer.md`, `finalizer.md`, `codex-review.md`, `agents/smells.txt`) runs as a spawned subagent because no further fan-out is needed. Any custom override that needs to fan out must follow the same playbook pattern.
+**Ограничение** — субагенты в текущем Claude Code не имеют инструмента Agent, поэтому не могут порождать других субагентов. Поэтому `prompts/review.md` читается напрямую оркестратором основной сессии (используется как playbook), а не передаётся субагенту — именно так разветвление на 5 специалистов реально выполняется параллельно. Одноагентная листовая работа (`task.md`, `fixer.md`, `finalizer.md`, `codex-review.md`, `agents/smells.txt`) выполняется как порождённый субагент, поскольку дальнейшего разветвления не требуется. Любое пользовательское переопределение, которому нужно разветвление, должно следовать тому же паттерну playbook.
 
-Configuration via `userConfig` (prompted at plugin install):
+Конфигурация через `userConfig` (запрашивается при установке плагина):
 
-| Key | Default | Description |
+| Ключ | По умолчанию | Описание |
 |-----|---------|-------------|
-| `external_review_cmd` | *(empty — auto-detect codex)* | Command for external code review tool |
-| `task_retries` | `1` | Retries for failed tasks before stopping |
-| `review_iterations` | `5` | Max fix-and-recheck cycles during internal review |
-| `external_review_iterations` | `10` | Max iterations for external review adversarial loop |
-| `finalize_enabled` | `true` | Whether to run the finalize phase (rebase + squash) |
-| `plans_dir` | `docs/plans` | Directory where plan files are located |
+| `external_review_cmd` | *(пусто — автоопределение codex)* | Команда для внешнего инструмента ревью кода |
+| `task_retries` | `1` | Повторы для проваленных задач перед остановкой |
+| `review_iterations` | `5` | Макс. число циклов исправления-и-перепроверки при внутреннем ревью |
+| `external_review_iterations` | `10` | Макс. число итераций состязательного цикла внешнего ревью |
+| `finalize_enabled` | `true` | Запускать ли фазу финализации (rebase + squash) |
+| `plans_dir` | `docs/plans` | Каталог, где находятся файлы планов |
 
-Environment variables read by `run-codex.sh`:
+Переменные окружения, читаемые `run-codex.sh`:
 
-| Variable | Default | Description |
+| Переменная | По умолчанию | Описание |
 |----------|---------|-------------|
-| `CODEX_MODEL` | `gpt-5.5` | Model name passed to `codex exec` via `-c model=...` |
-| `CODEX_NO_OVERRIDES` | *(unset)* | When set to the literal value `1`, suppresses all `-c` overrides (`model`, `model_reasoning_effort`, `stream_idle_timeout_ms`, `project_doc`). Useful for codex proxies / wrappers that reject `-c model/provider` overrides. Any other value (including `0`, `false`, empty) leaves the overrides on. |
+| `CODEX_MODEL` | `gpt-5.5` | Имя модели, передаваемое в `codex exec` через `-c model=...` |
+| `CODEX_NO_OVERRIDES` | *(не задано)* | При установке в буквальное значение `1` подавляет все переопределения `-c` (`model`, `model_reasoning_effort`, `stream_idle_timeout_ms`, `project_doc`). Полезно для прокси/обёрток codex, которые отклоняют переопределения `-c model/provider`. Любое другое значение (включая `0`, `false`, пустое) оставляет переопределения включёнными. |
 
 ### release-tools
 
-Release workflow tools for creating versioned releases with auto-generated notes.
+Инструменты рабочего процесса релизов для создания версионированных релизов с автогенерируемыми заметками.
 
-| Component | Trigger | Description |
+| Компонент | Триггер | Описание |
 |-----------|---------|-------------|
-| skill | `/release-tools:new` | Create GitHub/GitLab/Gitea release with auto-versioning and release notes |
-| skill | `/release-tools:last-tag` | Show commits since the last tag in a formatted table |
+| skill | `/release-tools:new` | Создать релиз GitHub/GitLab/Gitea с авто-версионированием и заметками о релизе |
+| skill | `/release-tools:last-tag` | Показать коммиты с последнего тега в форматированной таблице |
 
-**release** — full release workflow: asks release type (hotfix/minor/major), auto-detects platform (GitHub/GitLab/Gitea), calculates semantic version, generates release notes grouped by type (features/improvements/fixes) from merged PRs and commits, updates CHANGELOG if present, shows preview for confirmation, then publishes. Includes helper scripts for platform detection, version calculation, and notes generation.
+**release** — полный рабочий процесс релиза: спрашивает тип релиза (hotfix/minor/major), автоопределяет платформу (GitHub/GitLab/Gitea), вычисляет семантическую версию, генерирует заметки о релизе, сгруппированные по типу (features/improvements/fixes) из слитых PR и коммитов, обновляет CHANGELOG при наличии, показывает превью для подтверждения, затем публикует. Включает вспомогательные скрипты для определения платформы, вычисления версии и генерации заметок.
 
-**last-tag** — shows commits since the last tag in a formatted table with date, author, hash, and description. Detects single vs multiple authors and adjusts table layout. Offers interactive drill-down into individual commit details.
+**last-tag** — показывает коммиты с последнего тега в форматированной таблице с датой, автором, хешем и описанием. Определяет одного или нескольких авторов и подстраивает раскладку таблицы. Предлагает интерактивное углубление в детали отдельных коммитов.
 
 ### thinking-tools
 
-Analytical thinking tools for objective analysis.
+Инструменты аналитического мышления для объективного анализа.
 
-| Component | Trigger | Description |
+| Компонент | Триггер | Описание |
 |-----------|---------|-------------|
-| skill | `/thinking-tools:ask-codex` | Consult OpenAI Codex (GPT-5) for investigation, debugging, or code review |
-| skill | `/thinking-tools:dialectic <statement>` | Prove and counter-prove a statement using parallel agents |
-| skill | `/thinking-tools:root-cause-investigator` | Systematic 5-Why root cause analysis for errors and bugs |
+| skill | `/thinking-tools:ask-codex` | Консультация с OpenAI Codex (GPT-5) для расследования, отладки или ревью кода |
+| skill | `/thinking-tools:dialectic <statement>` | Доказать и опровергнуть утверждение с помощью параллельных агентов |
+| skill | `/thinking-tools:root-cause-investigator` | Систематический анализ первопричин методом 5-Why для ошибок и багов |
 
-**ask-codex** — consults OpenAI Codex (GPT-5) as a second opinion for debugging, investigation, or code review. Builds a focused prompt from conversation context, runs codex in read-only sandbox mode in the background, and presents findings with an independent assessment. Requires `codex` CLI to be installed and authenticated.
+**ask-codex** — консультируется с OpenAI Codex (GPT-5) как со вторым мнением для отладки, расследования или ревью кода. Строит сфокусированный промпт из контекста беседы, запускает codex в режиме песочницы только для чтения в фоне и представляет находки с независимой оценкой. Требует установленного и аутентифицированного CLI `codex`.
 
-**dialectic** — runs two agents in parallel with opposing goals (thesis vs antithesis) to eliminate confirmation bias. One agent finds all positive evidence, the other finds all negative evidence. After both complete, synthesizes findings into an objective conclusion and verifies cited evidence against actual code.
+**dialectic** — запускает двух агентов параллельно с противоположными целями (тезис против антитезиса), чтобы устранить предвзятость подтверждения. Один агент находит все положительные свидетельства, другой — все отрицательные. После завершения обоих синтезирует находки в объективный вывод и сверяет процитированные свидетельства с реальным кодом.
 
-Use cases: architecture decisions, bug analysis, performance claims, refactoring safety, code review.
+Сценарии использования: архитектурные решения, анализ багов, заявления о производительности, безопасность рефакторинга, ревью кода.
 
-**root-cause-investigator** — applies 5-Why methodology to drill from symptoms to fundamental root causes. Structures investigation through progressive depth: surface cause → process issues → system problems → design issues → root cause. Includes reference materials for common patterns (race conditions, resource exhaustion, integration failures) and investigation techniques.
+**root-cause-investigator** — применяет методологию 5-Why для углубления от симптомов к фундаментальным первопричинам. Структурирует расследование через прогрессивную глубину: поверхностная причина → проблемы процесса → системные проблемы → проблемы дизайна → первопричина. Включает справочные материалы по распространённым паттернам (гонки, исчерпание ресурсов, сбои интеграции) и техникам расследования.
 
 ### skill-eval
 
-Forces skill evaluation before every response.
+Принудительная оценка навыков перед каждым ответом.
 
-| Component | Trigger | Description |
+| Компонент | Триггер | Описание |
 |-----------|---------|-------------|
-| hook | `UserPromptSubmit` | Forces skill evaluation before every response |
+| hook | `UserPromptSubmit` | Принудительная оценка навыков перед каждым ответом |
 
-By default, Claude Code often ignores available skills and jumps straight to generic responses. This hook injects a system reminder on every prompt that enforces an evaluate → activate → implement sequence. When installed, Claude will either list relevant skills and call `Skill()` for each before implementing, or proceed directly when no skills are relevant.
+По умолчанию Claude Code часто игнорирует доступные навыки и сразу переходит к обобщённым ответам. Этот хук внедряет системное напоминание при каждом промпте, которое обеспечивает последовательность «оценить → активировать → реализовать». При установке Claude либо перечислит релевантные навыки и вызовет `Skill()` для каждого перед реализацией, либо перейдёт прямо к делу, когда релевантных навыков нет.
 
 ### workflow
 
-Session workflow helpers for knowledge capture, confusion handling, course correction, and clipboard operations.
+Помощники рабочего процесса сессии для фиксации знаний, обработки путаницы, коррекции курса и операций с буфером обмена.
 
-| Component | Trigger | Description |
+| Компонент | Триггер | Описание |
 |-----------|---------|-------------|
-| skill | `/workflow:learn` | Capture strategic project knowledge to project CLAUDE.md (routes per-developer / per-checkout discoveries to CLAUDE.local.md when that file is present) |
-| skill | `/workflow:clarify` | Investigate and explain user confusion, determine if real issue exists |
-| skill | `/workflow:wrong` | Reset and re-evaluate when current approach isn't working |
-| skill | `/workflow:md-copy` | Format final answer as markdown and copy to clipboard |
-| skill | `/workflow:txt-copy` | Copy generated text content to clipboard |
+| skill | `/workflow:learn` | Фиксирует стратегические знания о проекте в проектный CLAUDE.md (направляет находки уровня разработчика / checkout'а в CLAUDE.local.md, когда этот файл присутствует) |
+| skill | `/workflow:clarify` | Исследует и объясняет путаницу пользователя, определяет, есть ли реальная проблема |
+| skill | `/workflow:wrong` | Сброс и переоценка, когда текущий подход не работает |
+| skill | `/workflow:md-copy` | Форматирует итоговый ответ как markdown и копирует в буфер обмена |
+| skill | `/workflow:txt-copy` | Копирует сгенерированный текстовый контент в буфер обмена |
 
-**learn** — reviews conversation history, extracts strategic project knowledge (architecture patterns, conventions, operational insights), and saves selected items to the project CLAUDE.md. When `CLAUDE.local.md` is present, per-developer / per-checkout discoveries (machine-specific tooling, environment quirks) are routed there instead. Defers to any project-defined memory-placement guidance documented in `CLAUDE.md` or `.claude/rules/`. Uses granular selection via AskUserQuestion so the user picks exactly what to keep.
+**learn** — просматривает историю беседы, извлекает стратегические знания о проекте (паттерны архитектуры, конвенции, операционные инсайты) и сохраняет выбранные элементы в проектный CLAUDE.md. Когда присутствует `CLAUDE.local.md`, находки уровня разработчика / checkout'а (машинно-специфичный инструментарий, особенности окружения) направляются туда. Учитывает любые проектные указания по размещению памяти, задокументированные в `CLAUDE.md` или `.claude/rules/`. Использует гранулярный выбор через AskUserQuestion, чтобы пользователь выбрал ровно то, что нужно оставить.
 
-**clarify** — activates on confusion signals ("I don't understand", "why is this happening", etc.). Investigates the actual codebase to determine whether the confusion stems from a misunderstanding or a real issue. If real, proceeds to plan mode for a fix.
+**clarify** — активируется по сигналам путаницы («I don't understand», «why is this happening» и т.п.). Исследует реальную кодовую базу, чтобы определить, проистекает ли путаница из недопонимания или из реальной проблемы. Если реальная — переходит в режим плана для исправления.
 
-**wrong** — resets the current approach when it's not working. Re-analyzes the core problem, proposes 2-3 fresh alternatives with trade-offs, and recommends the best path forward.
+**wrong** — сбрасывает текущий подход, когда он не работает. Заново анализирует суть проблемы, предлагает 2–3 свежих альтернативы с компромиссами и рекомендует лучший путь.
 
-**md-copy** — formats the session's final answer as clean markdown (bold titles instead of headings, proper tables, code blocks) and copies to clipboard. Cross-platform clipboard detection (macOS pbcopy, Linux xclip/xsel).
+**md-copy** — форматирует итоговый ответ сессии как чистый markdown (жирные заголовки вместо headings, аккуратные таблицы, блоки кода) и копирует в буфер обмена. Кроссплатформенное определение буфера обмена (macOS pbcopy, Linux xclip/xsel).
 
-**txt-copy** — copies generated text (emails, messages, letters) to clipboard via a timestamped temp file. Cross-platform clipboard detection (macOS pbcopy, Linux xclip/xsel).
+**txt-copy** — копирует сгенерированный текст (письма, сообщения) в буфер обмена через временный файл с меткой времени. Кроссплатформенное определение буфера обмена (macOS pbcopy, Linux xclip/xsel).
 
-## Custom Rules
+## Пользовательские правила (Custom Rules)
 
-Both the **planning** and **brainstorm** plugins support custom rules injection — free-form markdown files loaded at skill invocation time and applied as additional instructions alongside built-in behavior.
+Оба плагина — **planning** и **brainstorm** — поддерживают внедрение пользовательских правил: свободные markdown-файлы, загружаемые в момент вызова навыка и применяемые как дополнительные инструкции наряду со встроенным поведением.
 
-**Two levels**, checked in order (first-found-wins, never merged):
+**Два уровня**, проверяемые по порядку (побеждает первый найденный, никогда не объединяются):
 
-1. **Project-level**: `.claude/<rules-file>.md` in the current working directory
-2. **User-level**: `$CLAUDE_PLUGIN_DATA/<rules-file>.md` (per-plugin persistent storage)
+1. **Уровень проекта**: `.claude/<rules-file>.md` в текущем рабочем каталоге
+2. **Уровень пользователя**: `$CLAUDE_PLUGIN_DATA/<rules-file>.md` (постоянное хранилище на плагин)
 
-When both non-empty files exist, only the project-level file is used. Empty files are treated as absent and fall through to the next level.
+Когда существуют оба непустых файла, используется только файл уровня проекта. Пустые файлы трактуются как отсутствующие и передают управление на следующий уровень.
 
-| Plugin | Rules file | Affects |
+| Плагин | Файл правил | Влияет на |
 |--------|-----------|---------|
 | planning | `planning-rules.md` | make, exec, plan-review |
-| brainstorm | `brainstorm-rules.md` | brainstorm skill |
+| brainstorm | `brainstorm-rules.md` | навык brainstorm |
 
-**Example** — create `.claude/planning-rules.md` in your project:
+**Пример** — создайте `.claude/planning-rules.md` в своём проекте:
 
 ```markdown
 ## testing conventions
@@ -377,17 +377,17 @@ When both non-empty files exist, only the project-level file is used. Empty file
 - always include rollback steps for migrations
 ```
 
-**Managing rules** — ask the make command or brainstorm skill to add, show, or clear rules at either level (exec loads rules but management is done through make or brainstorm):
+**Управление правилами** — попросите команду make или навык brainstorm добавить, показать или очистить правила на любом уровне (exec загружает правила, но управление выполняется через make или brainstorm):
 
-- "show my planning rules" — displays current rules and which level they came from
-- "add Go testing rules to project-level planning rules" — writes to `.claude/planning-rules.md`
-- "set up brainstorm rules from my-conventions.md" — reads file and writes to rules location
-- "clear user-level brainstorm rules" — deletes `$CLAUDE_PLUGIN_DATA/brainstorm-rules.md`
+- «show my planning rules» — показывает текущие правила и с какого уровня они пришли
+- «add Go testing rules to project-level planning rules» — записывает в `.claude/planning-rules.md`
+- «set up brainstorm rules from my-conventions.md» — читает файл и записывает в расположение правил
+- «clear user-level brainstorm rules» — удаляет `$CLAUDE_PLUGIN_DATA/brainstorm-rules.md`
 
-## Credits
+## Благодарности
 
-Some skills and scripts were influenced by or adapted from community ideas, blog posts, and open-source examples. Sources were not tracked accurately from the start. If you recognize your work and want proper attribution, please [open an issue](https://github.com/umputun/cc-thingz/issues) — I'll fix it.
+Некоторые навыки и скрипты были вдохновлены идеями сообщества, постами в блогах и примерами с открытым исходным кодом или адаптированы из них. Источники с самого начала отслеживались неточно. Если вы узнали свою работу и хотите корректную атрибуцию, пожалуйста, [откройте issue](https://github.com/umputun/cc-thingz/issues) — я исправлю.
 
-## License
+## Лицензия
 
 MIT
