@@ -1,64 +1,62 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Этот файл содержит указания для Claude Code (claude.ai/code) при работе с кодом в этом репозитории.
 
-## Repository Purpose
+## Назначение репозитория
 
-Things to make Claude Code even better — hooks, skills, and commands, organized as a marketplace of independent plugins.
+Вещи, которые делают Claude Code ещё лучше — хуки, навыки и команды, организованные как marketplace независимых плагинов.
 
-## Key Rules
+## Ключевые правила
 
-- **README.md must be kept up to date** — whenever a new component, script, or configuration is added, update README.md with a description of what it does and how to use it.
-- Content is MIT-licensed.
-- This is a personal project by Umputun (GitHub).
-- **No personal configuration** — scripts and configs must be generic and not contain hardcoded personal paths, editor preferences, or machine-specific settings. Use environment variables (e.g., `$EDITOR`) for user-specific values.
-- **Self-contained documentation** — do not reference external custom skills, actions, or configurations that exist only in a user's personal Claude Code setup. All documentation must refer only to what exists in this repository.
+- **README.md должен поддерживаться в актуальном состоянии** — при добавлении нового компонента, скрипта или конфигурации обновляйте README.md описанием того, что это делает и как этим пользоваться.
+- **Никакой персональной конфигурации** — скрипты и конфиги должны быть универсальными и не содержать захардкоженных персональных путей, предпочтений редактора или машинно-специфичных настроек. Для пользовательских значений используйте переменные окружения (например, `$EDITOR`).
+- **Самодостаточная документация** — не ссылайтесь на внешние пользовательские навыки, действия или конфигурации, которые существуют только в личной настройке Claude Code у конкретного пользователя. Вся документация должна ссылаться только на то, что есть в этом репозитории.
 
-## Conventions
+## Конвенции
 
-- Hook scripts use `${CLAUDE_PLUGIN_ROOT}` for path resolution when running as a plugin. The plugin system copies files to a cache location during install, so absolute/relative paths won't work.
-- Manual install instructions are kept in README.md as a fallback for users who prefer direct setup.
-- **Versioning** — each plugin has its own `version` in `plugins/<name>/.claude-plugin/plugin.json`. Bump independently per plugin. Use semver: patch for bug fixes, minor for new components, major for breaking changes. **Bump triggers on any change to bundled plugin content** — prompts, agents, references (e.g., `usage.md`), scripts, commands, hooks — not just `.claude-plugin/` files. Anything shipped to consumers via the plugin is a release artifact.
-- **Changelog**: when bumping a plugin version, update `CHANGELOG.md` in the same change. Version headings use the plugin name and plugin version (e.g., `## planning v3.7.1 - YYYY-MM-DD`), not tags. Keep entries grouped like the changelog style: New Features, Improvements, Bug Fixes, Other.
-- **Cross-references** — when skills reference other skills within the same plugin, use the plugin name prefix (e.g., `/review:writing-style`). When referencing skills in other plugins, use that plugin's name (e.g., `/planning:make`).
+- Хук-скрипты используют `${CLAUDE_PLUGIN_ROOT}` для разрешения путей при работе в составе плагина. Система плагинов копирует файлы в кеш-локацию при установке, поэтому абсолютные/относительные пути не сработают.
+- Инструкции по ручной установке хранятся в README.md как запасной вариант для пользователей, предпочитающих прямую настройку.
+- **Версионирование** — у каждого плагина своя `version` в `plugins/<name>/.claude-plugin/plugin.json`. Бампайте независимо для каждого плагина. Используйте semver: patch для багфиксов, minor для новых компонентов, major для ломающих изменений. **Бамп срабатывает при любом изменении bundled-контента плагина** — промпты, агенты, references (например, `usage.md`), скрипты, команды, хуки — а не только файлов в `.claude-plugin/`. Всё, что поставляется потребителям через плагин, является артефактом релиза.
+- **Changelog**: при бампе версии плагина обновляйте `CHANGELOG.md` в том же изменении. Заголовки версий используют имя плагина и версию плагина (например, `## planning v3.7.1 - YYYY-MM-DD`), а не теги. Группируйте записи в стиле changelog: New Features, Improvements, Bug Fixes, Other.
+- **Перекрёстные ссылки** — когда навыки ссылаются на другие навыки внутри того же плагина, используйте префикс имени плагина (например, `/review:writing-style`). При ссылке на навыки в других плагинах используйте имя того плагина (например, `/planning:make`).
 
-## Structure
+## Структура
 
-- `.claude-plugin/marketplace.json` — marketplace catalog listing all plugins
-- `plugins/` — each subdirectory is an independent plugin:
-  - `plugins/brainstorm/` — collaborative design skill
-  - `plugins/review/` — PR review skill + writing style skill
-  - `plugins/planning/` — plan command, exec skill, plan-annotate hook, and bundled reference files
-  - `plugins/release-tools/` — release workflow + last-tag skills
-  - `plugins/thinking-tools/` — dialectic analysis + root-cause-investigator skills
-  - `plugins/skill-eval/` — skill evaluation hook
-  - `plugins/workflow/` — session workflow helpers (learn, clarify, wrong, md-copy, txt-copy)
-- Each plugin has its own `.claude-plugin/plugin.json`, and standard subdirectories (`skills/`, `commands/`, `hooks/`) as needed.
+- `.claude-plugin/marketplace.json` — каталог marketplace со списком всех плагинов
+- `plugins/` — каждый подкаталог является независимым плагином:
+  - `plugins/brainstorm/` — навык совместного проектирования
+  - `plugins/review/` — навык ревью PR + навык стиля письма
+  - `plugins/planning/` — команда plan, навык exec, хук plan-annotate и bundled reference-файлы
+  - `plugins/release-tools/` — навыки release-процесса + last-tag
+  - `plugins/thinking-tools/` — навыки диалектического анализа + root-cause-investigator
+  - `plugins/skill-eval/` — хук оценки навыков
+  - `plugins/workflow/` — помощники рабочего процесса сессии (learn, clarify, wrong, md-copy, txt-copy)
+- У каждого плагина свой `.claude-plugin/plugin.json` и стандартные подкаталоги (`skills/`, `commands/`, `hooks/`) по мере необходимости.
 
-## Local Plugin Development
+## Локальная разработка плагинов
 
-- **Testing locally** — use `claude --plugin-dir plugins/<name>` to load a local plugin without publishing. Use `/reload-plugins` inside a session to pick up file changes without restarting.
-- **Updating marketplace cache** — plugin hooks and skills are read from `~/.claude/plugins/marketplaces/`, not `cache/`. When manually testing changes, copy files to the marketplace path.
+- **Локальное тестирование** — используйте `claude --plugin-dir plugins/<name>`, чтобы загрузить локальный плагин без публикации. Используйте `/reload-plugins` внутри сессии, чтобы подхватить изменения файлов без перезапуска.
+- **Обновление кеша marketplace** — хуки и навыки плагинов читаются из `~/.claude/plugins/marketplaces/`, а не из `cache/`. При ручном тестировании изменений копируйте файлы в путь marketplace.
 
-## Known Claude Code Limitations
+## Известные ограничения Claude Code
 
-- **Plugin skill autocomplete** — skills defined in `skills/*/SKILL.md` don't appear in the `/` autocomplete dropdown, only commands in `commands/*.md` do. Skills are still invocable by typing the full name (e.g., `/planning:exec`) or via natural language intent matching.
-- **Plugin hook deny rendering** — PreToolUse hooks that return `permissionDecision: "deny"` display as "blocking error" with an ugly error prefix in the TUI. The same deny from a settings.json hook renders cleanly as a permission prompt. This is a Claude Code rendering issue, not fixable from the plugin side.
+- **Автодополнение навыков плагина** — навыки, определённые в `skills/*/SKILL.md`, не появляются в выпадающем списке автодополнения `/`, там есть только команды из `commands/*.md`. Навыки всё равно вызываемы вводом полного имени (например, `/planning:exec`) или через сопоставление намерения на естественном языке.
+- **Отрисовка deny у хука плагина** — хуки PreToolUse, возвращающие `permissionDecision: "deny"`, отображаются как «blocking error» с уродливым префиксом ошибки в TUI. Тот же deny из хука в settings.json отрисовывается аккуратно как запрос разрешения. Это проблема отрисовки Claude Code, не исправимая со стороны плагина.
 
-## Testing
+## Тестирование
 
-- Python scripts include embedded tests run via `--test` flag: `python3 plugins/planning/scripts/plan-annotate.py --test`
-- Shell test scripts live in `tests/`: `bash tests/test-planning-resolve-rules.sh`, `bash tests/test-brainstorm-resolve-rules.sh`
+- Python-скрипты включают встроенные тесты, запускаемые флагом `--test`: `python3 plugins/planning/scripts/plan-annotate.py --test`
+- Shell-тесты лежат в `tests/`: `bash tests/test-planning-resolve-rules.sh`, `bash tests/test-brainstorm-resolve-rules.sh`
 
-## Plugin Design Constraints
+## Ограничения дизайна плагинов
 
-- **Subagents have no Agent tool** — verified empirically (Claude Code 2.1.140, re-confirmed on 2.1.168): a spawned `general-purpose` subagent invoking `ToolSearch("select:Agent,Task")` returns "No matching deferred tools found". Subagents cannot spawn other subagents. Note: the "dynamic workflows" feature added in 2.1.154 is main-session orchestration and does NOT give spawned subagents nesting ability.
-- **Implication for prompt design**: any prompt that needs to fan out parallel subagents must be executed by the main session orchestrator, not given to a spawned subagent. Example: `plugins/planning/skills/exec/references/prompts/review.md` is a playbook that the orchestrator reads and follows directly (per SKILL.md steps 7 and 9) — never passed to a subagent as its prompt.
-- **Single-subagent prompts are fine** — `task.md`, `fixer.md`, `finalizer.md`, `codex-review.md`, `agents/smells.txt` all run as spawned subagents because they perform leaf work (no further spawning needed). Multi-level orchestration must collapse to one level via the main session.
+- **У субагентов нет инструмента Agent** — проверено эмпирически (Claude Code 2.1.140, перепроверено на 2.1.168): порождённый `general-purpose` субагент, вызывающий `ToolSearch("select:Agent,Task")`, получает «No matching deferred tools found». Субагенты не могут порождать других субагентов. Примечание: фича «dynamic workflows», добавленная в 2.1.154, — это оркестрация на уровне главной сессии и НЕ даёт порождённым субагентам способности к вложенности.
+- **Следствие для дизайна промптов**: любой промпт, которому нужно разворачивать параллельных субагентов, должен исполняться оркестратором главной сессии, а не передаваться порождённому субагенту. Пример: `plugins/planning/skills/exec/references/prompts/review.md` — это playbook, который оркестратор читает и исполняет напрямую (согласно шагам 7 и 9 в SKILL.md) — он никогда не передаётся субагенту как его промпт.
+- **Одноагентные промпты — это нормально** — `task.md`, `fixer.md`, `finalizer.md`, `codex-review.md`, `agents/smells.txt` все выполняются как порождённые субагенты, потому что делают листовую работу (дальнейшее порождение не нужно). Многоуровневую оркестрацию нужно схлопывать до одного уровня через главную сессию.
 
-## Custom Rules Injection
+## Внедрение пользовательских правил (Custom Rules)
 
-- Plugins can support user-provided custom rules via `resolve-rules.sh` scripts in `plugins/<name>/scripts/`
-- Resolution chain: `.claude/<rules-file>` (project) → `$CLAUDE_PLUGIN_DATA/<rules-file>` (user), first-found-wins, never merged
-- Skills/commands load rules via LLM-invoked bash (`bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-rules.sh <filename>`) and apply as additional instructions
-- Reference docs for each plugin's rules mechanism live in `plugins/<name>/references/custom-rules.md`
+- Плагины могут поддерживать пользовательские правила через скрипты `resolve-rules.sh` в `plugins/<name>/scripts/`
+- Цепочка разрешения: `.claude/<rules-file>` (проект) → `$CLAUDE_PLUGIN_DATA/<rules-file>` (пользователь), побеждает первый найденный, никогда не сливаются
+- Навыки/команды загружают правила через bash, вызываемый LLM (`bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-rules.sh <filename>`), и применяют как дополнительные инструкции
+- Reference-документация по механизму правил каждого плагина лежит в `plugins/<name>/references/custom-rules.md`
