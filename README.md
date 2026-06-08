@@ -8,15 +8,15 @@
 
 Добавьте marketplace, затем установите нужные плагины:
 
-    /plugin marketplace add umputun/cc-thingz
+    /plugin marketplace add ssortia/cc-thingz
 
-    /plugin install brainstorm@umputun-cc-thingz
-    /plugin install review@umputun-cc-thingz
-    /plugin install planning@umputun-cc-thingz
-    /plugin install release-tools@umputun-cc-thingz
-    /plugin install thinking-tools@umputun-cc-thingz
-    /plugin install skill-eval@umputun-cc-thingz
-    /plugin install workflow@umputun-cc-thingz
+    /plugin install brainstorm@ssortia-cc-thingz
+    /plugin install review@ssortia-cc-thingz
+    /plugin install planning@ssortia-cc-thingz
+    /plugin install release-tools@ssortia-cc-thingz
+    /plugin install thinking-tools@ssortia-cc-thingz
+    /plugin install skill-eval@ssortia-cc-thingz
+    /plugin install workflow@ssortia-cc-thingz
 
 Протестировать плагин локально:
 
