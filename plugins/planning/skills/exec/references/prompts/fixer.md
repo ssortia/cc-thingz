@@ -19,27 +19,26 @@ For each finding, read the actual code at the specified file:line. Check 20-30 l
 STEP 2 - FIX:
 - Fix all confirmed issues (including adding missing tests if flagged)
 
-STEP 3 - VALIDATE (MANDATORY — code MUST compile and tests MUST pass before commit):
+STEP 3 - VALIDATE (MANDATORY — code MUST compile and tests MUST pass before you report):
 - Build, test, and run validation commands from PLAN_FILE_PATH
 - If anything fails: fix it and re-run everything
-- NEVER commit broken code
+- NEVER report with broken code — validation must pass first. Do NOT commit (the orchestrator commits after the user approves); leave changes in the working tree.
 
-STEP 4 - COMMIT (only after STEP 3 passes with zero errors):
-- Commit fixes: bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/stage-and-commit.sh "fix: address code review findings" <changed-files>
-
-STEP 5 - LOG PROGRESS (after commit):
+STEP 4 - LOG PROGRESS (after validation passes):
 Log details: echo "- confirmed: <list>
 - false positives: <list>
 - fixes: <what changed>
 - validation: <what passed>" | bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/append-progress.sh PROGRESS_FILE_PATH
 IMPORTANT: Use ONLY the append-progress.sh script. Do NOT use cat >>, echo >>, or heredocs directly.
 
-STEP 6 - REPORT (MANDATORY — this is your return value to the parent):
-Your final response MUST include a structured summary starting with "FIXES:" on its own line, followed by one line per fix:
+STEP 5 - REPORT (MANDATORY — this is your return value to the parent):
+Your final response MUST include a structured summary starting with "FIXES:" on its own line, followed by one line per fix, then a SUMMARY and FILES line:
 FIXES:
 - fixed: <file>:<line> — <what was fixed>
 - fixed: <file>:<line> — <what was fixed>
 - false positive: <description> — <why discarded>
+SUMMARY: <1-3 sentences — what you fixed and why>
+FILES: <space-separated list of EVERY file you changed>
 
-This report is shown to the user. Be specific about what changed.
+This report is shown to the user, and the orchestrator uses FILES to stage the commit, so the FILES list MUST be complete. Be specific about what changed.
 ```

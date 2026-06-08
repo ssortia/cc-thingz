@@ -315,7 +315,7 @@ then use AskUserQuestion:
     }]
   }
   ```
-  - **Interactive**: begin implementing task 1 interactively in this session. Use TodoWrite tool to track progress and mark todos completed immediately (do not batch)
+  - **Interactive**: begin implementing task 1 interactively in this session. Use TodoWrite tool to track progress and mark todos completed immediately (do not batch). Before each commit, describe what was done and why, then ask the user to confirm via AskUserQuestion (they review the diff in their IDE) — do not commit without approval
   - **Autonomous**: invoke `/planning:exec <plan-file-path>` for autonomous execution with multi-phase review
 - **Done**: commit plan with message like "docs: add <topic> implementation plan", stop
 

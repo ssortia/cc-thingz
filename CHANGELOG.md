@@ -4,6 +4,13 @@ This repo ships independent Claude Code plugins. Version headings use values fro
 
 Entries are sorted by plugin version date, newest first.
 
+## planning v3.11.0 - 2026-06-08
+
+### New Features
+
+- user-gated commits in `/planning:exec`: commits no longer happen inside subagents. Task and fixer subagents now leave their changes in the working tree and return a `SUMMARY` (what changed and why) plus a `FILES` list; the orchestrator describes the change and asks the user to confirm (Approve / Request changes / Abort) before committing via `stage-and-commit.sh`. Lets the user review each diff in their IDE first. The gate applies in autonomous mode too.
+- `/planning:make` interactive implementation now asks for confirmation before each commit as well.
+
 ## planning v3.10.0 - 2026-06-08
 
 ### New Features

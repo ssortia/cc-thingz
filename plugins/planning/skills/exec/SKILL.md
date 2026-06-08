@@ -37,6 +37,23 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-rules.sh planning-rules.md ${CLAUDE_P
 
 If the output is non-empty, store it as the resolved custom rules content. When substituting `USER_RULES` in task prompts, wrap the content with a label so the subagent understands it: use "ADDITIONAL CUSTOM RULES:\n<content>" as the substitution. If the output is empty, substitute an empty string for `USER_RULES`. See `${CLAUDE_PLUGIN_ROOT}/references/custom-rules.md` for full documentation on the rules mechanism.
 
+## Commit confirmation (user-gated commits)
+
+Subagents NEVER commit — they leave all changes in the working tree and return a `SUMMARY` (what changed and why) and a `FILES` line. **Every commit is made by the orchestrator, and ONLY after the user approves**, so the user can review the diff in their IDE first. After any task or fixer subagent finishes and its validation passed, run this gate before moving on:
+
+1. **Describe the change** — show the subagent's `SUMMARY` to the user (what was done and why). Do not paste diffs; the user reviews those in their IDE.
+2. **Ask** — invoke the AskUserQuestion tool:
+   - question: "Commit these changes? Review the diff in your IDE first."
+   - header: "Commit"
+   - options: "Approve" (commit now), "Request changes" (redo with feedback), "Abort" (stop the run)
+3. **On Approve** — commit the subagent's reported `FILES` (always include `PLAN_FILE_PATH`) via:
+   `bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/stage-and-commit.sh "<message>" <files>`
+   Message: `feat: <task title>` for task commits, `fix: <phase> review findings` for fixer commits.
+4. **On Request changes** — collect the user's feedback, then re-spawn the SAME subagent with that feedback appended to its prompt, and run this gate again on the new result.
+5. **On Abort** — stop the run and report the current state. Uncommitted changes remain in the working tree for the user to handle.
+
+This gate is MANDATORY and is NOT skipped in auto/autonomous mode — the user explicitly opted into per-commit confirmation. Running the approved `stage-and-commit.sh` is the only VCS write the orchestrator performs; it still never edits or fixes code itself.
+
 ## Process
 
 ### Step 1. Resolve plan file
@@ -146,15 +163,15 @@ Repeat until no `[ ]` checkboxes remain in any Task section:
    - `subagent_type: "general-purpose"`
    - The task prompt from `prompts/task.md`, with all placeholders substituted as described in the Placeholder Substitution section above (including `USER_RULES`)
 6. **After subagent returns**, re-read the plan file and check if that task's checkboxes are now `[x]`
-   - If yes — task succeeded, continue loop
+   - If yes — task succeeded; run the **commit confirmation gate** (see "Commit confirmation") with the subagent's `SUMMARY`/`FILES` and a `feat: <task title>` message, then continue the loop
    - If no — **retry** with a fresh subagent for the same task up to `task_retries` times (userConfig, default: 1). If all retries fail, stop and report failure to user
-7. **Report to user**: "Task N completed" (one line). The task subagent logs details to the progress file.
+7. **Report to user**: "Task N committed" (one line) once the gate approves. The task subagent logs details to the progress file.
 
 CRITICAL: Spawn exactly ONE task subagent per iteration and WAIT for it to return before starting the next. NEVER batch-spawn multiple task subagents in a single message. Plan tasks are ordered and interdependent — later tasks build on the files earlier tasks create, and every task subagent edits the same plan-file checkboxes and overlapping source files, so running them in parallel corrupts the plan and the working tree. The "launch in a single message for parallel execution" instruction applies ONLY to the review phases (steps 7 and 9), never to this task loop.
 
 CRITICAL: Do NOT stop the loop based on subagent return text. The ONLY condition to stop is: no `[ ]` checkboxes remain in any Task section (`### Task N:` or `### Iteration N:`). Always re-read the plan file to check.
 
-CRITICAL: You are the ORCHESTRATOR. Never read code, debug errors, investigate diagnostics, or fix issues yourself. If a subagent leaves problems (compiler errors, test failures, lint issues), retry with a fresh subagent — pass the error details in the prompt so it can fix them. All code work happens inside subagents, not in the orchestrator.
+CRITICAL: You are the ORCHESTRATOR. Never read code, debug errors, investigate diagnostics, or fix issues yourself. If a subagent leaves problems (compiler errors, test failures, lint issues), retry with a fresh subagent — pass the error details in the prompt so it can fix them. All code work happens inside subagents, not in the orchestrator. The one VCS write you DO perform is running the user-approved `stage-and-commit.sh` in the commit confirmation gate — you commit, but never edit or fix code.
 
 Maximum iterations safety limit: 50. If reached, stop and report to user.
 
@@ -181,7 +198,7 @@ Loop up to `review_iterations` times (userConfig, default: 3). Track the current
 
 4. **Spawn a fixer agent** — resolve `prompts/fixer.md` through the override chain. Launch with `mode: "bypassPermissions"`, `subagent_type: "general-purpose"`. Pass the FULL unedited review output as FINDINGS_LIST — the fixer decides what's real, not you.
 
-5. **After fixer returns** → show the "FIXES:" section to the user. Report "Review phase 1: iteration N fixes applied". Loop back to step 1.
+5. **After fixer returns** → show the "FIXES:" section to the user, then run the **commit confirmation gate** (see "Commit confirmation") with the fixer's `SUMMARY`/`FILES` and a `fix: phase 1 review findings` message. Once approved, report "Review phase 1: iteration N fixes applied". Loop back to step 1.
 
 If `review_iterations` reached with issues still found, report "Review phase 1: max iterations reached, moving on" and set `PHASE1_CLEAN = false`.
 
@@ -214,7 +231,7 @@ Loop up to `external_review_iterations` times (userConfig, default: 5):
 
 6. **Spawn a fixer agent** — same as other review phases. Resolve `prompts/fixer.md`, pass codex output as FINDINGS_LIST. Fixer verifies, fixes, commits, reports FIXES.
 
-7. **Report fixer results to user** — show FIXES section. Log to progress file.
+7. **Report fixer results to user** — show FIXES section, then run the **commit confirmation gate** (see "Commit confirmation") with the fixer's `SUMMARY`/`FILES` and a `fix: codex review findings` message. Log to progress file.
 
 8. **Decide whether to loop**:
    - If `has_blocking` is false → report "Codex review: only minor findings — fixes applied, stopping loop" and proceed to step 9.
@@ -228,7 +245,7 @@ If `external_review_iterations` reached with critical/major issues still found, 
 
 Report to user: "--- Review phase 3: critical/major only (single pass) ---"
 
-Reuse the `prompts/review.md` playbook already read in step 7 (do NOT re-read it). Set `REVIEW_PHASE` = `critical` and `REVIEW_SCOPE` = full, and follow its playbook FROM THIS MAIN SESSION — launch 2 parallel review agents (quality, implementation) focusing on critical/major issues only. Subagents do not have Agent tool access, so the fanout MUST be initiated from the main orchestrator. Same fixer flow — pass findings to fixer, show FIXES to user.
+Reuse the `prompts/review.md` playbook already read in step 7 (do NOT re-read it). Set `REVIEW_PHASE` = `critical` and `REVIEW_SCOPE` = full, and follow its playbook FROM THIS MAIN SESSION — launch 2 parallel review agents (quality, implementation) focusing on critical/major issues only. Subagents do not have Agent tool access, so the fanout MUST be initiated from the main orchestrator. Same fixer flow — pass findings to fixer, show FIXES, then run the **commit confirmation gate** (fixer `SUMMARY`/`FILES`, `fix: critical review findings`) before continuing.
 
 ### Step 10. Finalize
 
@@ -270,6 +287,7 @@ When stats summary is done (or skipped on failure):
 - Maintain progress file (`/tmp/progress-<plan-name>.txt`) — see `prompts/progress-file.md` for format and when to write
 - Do not modify the plan file yourself — only subagents modify it
 - Do not implement or fix code yourself — only subagents implement and fix
+- Subagents NEVER commit — they leave changes in the working tree and return `SUMMARY`/`FILES`. The orchestrator commits via `stage-and-commit.sh` only after the user approves through the commit confirmation gate (see "Commit confirmation")
 - If a subagent fails or leaves broken code, re-run the loop — do NOT investigate or fix it yourself
 - NEVER dismiss findings as "pre-existing", "not from changes", or "architectural" — ALL findings are actionable
 - NEVER summarize or filter agent findings — pass the full output to the fixer agent verbatim

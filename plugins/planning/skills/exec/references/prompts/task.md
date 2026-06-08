@@ -26,10 +26,9 @@ STEP 2 - VALIDATE:
 STEP 3 - COMPLETE (after validation passes):
 - Edit PLAN_FILE_PATH and change [ ] to [x] for each checkbox you implemented in the current Task section
 - If Task sections are complete but Success criteria, Overview, or Context has [ ] items that the implementation satisfies, mark them [x] too
-- Commit all changes using the script: bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/stage-and-commit.sh "feat: <brief task description>" file1 file2 ...
-  List all changed files explicitly (source files, test files, plan file)
+- Do NOT commit. The orchestrator commits after the user approves — leave ALL your changes in the working tree.
 
-STEP 4 - LOG PROGRESS (after commit):
+STEP 4 - LOG PROGRESS:
 Log a header line: bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/append-progress.sh PROGRESS_FILE_PATH "task N: <title>"
 Then log the details using echo piped to the script:
 echo "- modified: <files>
@@ -38,9 +37,13 @@ echo "- modified: <files>
 - validation: <what commands passed>" | bash ${CLAUDE_PLUGIN_ROOT}/skills/exec/scripts/append-progress.sh PROGRESS_FILE_PATH
 IMPORTANT: Use ONLY the append-progress.sh script for writing to the progress file. Do NOT use cat >>, echo >>, or heredocs directly.
 
-STOP after logging progress.
+STEP 5 - REPORT (MANDATORY — this is your return value to the orchestrator):
+Your final response MUST end with these two lines verbatim:
+SUMMARY: <1-3 sentences — what you implemented in this task and why>
+FILES: <space-separated list of EVERY file you created or modified, including PLAN_FILE_PATH>
+The orchestrator shows SUMMARY to the user and uses FILES to stage the commit, so the FILES list MUST be complete (source, tests, plan file).
 
-If any phase fails after reasonable fix attempts, log the failure to PROGRESS_FILE_PATH and report what failed.
+If any phase fails after reasonable fix attempts, log the failure to PROGRESS_FILE_PATH and report what failed instead of the SUMMARY/FILES lines.
 
-ONE task section per run. After commit and progress log, STOP.
+ONE task section per run. After logging progress and emitting SUMMARY/FILES, STOP — do not commit.
 ```
