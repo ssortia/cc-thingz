@@ -52,8 +52,8 @@ Things to make Claude Code even better — hooks, skills, and commands, organize
 
 ## Plugin Design Constraints
 
-- **Subagents have no Agent tool** — verified empirically (Claude Code 2.1.140): a spawned `general-purpose` subagent invoking `ToolSearch("select:Task")` returns "No matching deferred tools found". Subagents cannot spawn other subagents.
-- **Implication for prompt design**: any prompt that needs to fan out parallel subagents must be executed by the main session orchestrator, not given to a spawned subagent. Example: `plugins/planning/skills/exec/references/prompts/review.md` is a playbook that the orchestrator reads and follows directly (per SKILL.md steps 7 and 10) — never passed to a subagent as its prompt.
+- **Subagents have no Agent tool** — verified empirically (Claude Code 2.1.140, re-confirmed on 2.1.168): a spawned `general-purpose` subagent invoking `ToolSearch("select:Agent,Task")` returns "No matching deferred tools found". Subagents cannot spawn other subagents. Note: the "dynamic workflows" feature added in 2.1.154 is main-session orchestration and does NOT give spawned subagents nesting ability.
+- **Implication for prompt design**: any prompt that needs to fan out parallel subagents must be executed by the main session orchestrator, not given to a spawned subagent. Example: `plugins/planning/skills/exec/references/prompts/review.md` is a playbook that the orchestrator reads and follows directly (per SKILL.md steps 7 and 9) — never passed to a subagent as its prompt.
 - **Single-subagent prompts are fine** — `task.md`, `fixer.md`, `finalizer.md`, `codex-review.md`, `agents/smells.txt` all run as spawned subagents because they perform leaf work (no further spawning needed). Multi-level orchestration must collapse to one level via the main session.
 
 ## Custom Rules Injection
