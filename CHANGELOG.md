@@ -4,6 +4,12 @@ This repo ships independent Claude Code plugins. Version headings use values fro
 
 Entries are sorted by plugin version date, newest first.
 
+## planning v3.10.0 - 2026-06-08
+
+### New Features
+
+- `/planning:make` step 3 now opens the freshly created plan in the JetBrains IDE hosting the current terminal session. A new bundled `scripts/open-in-ide.sh` detects the host IDE by walking the process ancestry (PhpStorm, WebStorm, IDEA, GoLand, PyCharm, etc.) and opens the file in the running instance. Best-effort and silent — it does nothing when not running inside a JetBrains IDE terminal, so non-JetBrains users are unaffected.
+
 ## planning v3.9.0 - 2026-06-08
 
 ### Improvements

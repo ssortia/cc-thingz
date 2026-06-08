@@ -253,6 +253,14 @@ Example (Files block + tests as separate checklist items):
 
 after creating the file, tell user: "created plan: `docs/plans/yyyymmdd-<task-name>.md`"
 
+then open it in the host editor (best-effort) via Bash:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/open-in-ide.sh <plan-file-path>
+```
+
+this opens the plan in the JetBrains IDE that hosts the current terminal session (detected from the process ancestry) so the user can read it while choosing what's next. it silently does nothing when not running inside a JetBrains IDE terminal, so it is safe to call unconditionally.
+
 then use AskUserQuestion:
 
 ```json
