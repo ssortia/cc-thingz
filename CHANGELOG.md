@@ -4,6 +4,15 @@ This repo ships independent Claude Code plugins. Version headings use values fro
 
 Entries are sorted by plugin version date, newest first.
 
+## planning v3.8.0 - 2026-06-08
+
+### Improvements
+
+- reduce context accumulated during a `/planning:make` run: batch the step 1 context questions (purpose, scope, constraints, testing) into a single AskUserQuestion call and derive the plan title automatically instead of asking five questions one at a time
+- step 0: prefer Grep for discovery and read at most one canonical file as a style exemplar, leaning on `CLAUDE.md` / `planning-rules.md` as the primary source of conventions
+- trim the embedded plan template — drop the triplicated "tests required" wording (kept once in Development Approach) and the second worked example in the Implementation Steps comment
+- condense the `execution enforcement` and `rules management` sections; rules management now points to `references/custom-rules.md` for full detail
+
 ## planning v3.7.4 - 2026-06-02
 
 ### Improvements

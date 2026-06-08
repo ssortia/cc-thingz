@@ -20,15 +20,13 @@ if the output is non-empty, treat it as additional instructions that supplement 
 
 ### rules management
 
-when the user asks to add, show, or clear custom planning rules, handle these operations:
+when the user asks to show/add/clear custom planning rules:
 
-- **show rules**: run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-rules.sh planning-rules.md ${CLAUDE_PLUGIN_DATA}` and display the output. if the output is empty, tell the user no custom rules are configured at either level. otherwise, to determine the source, check if `.claude/planning-rules.md` exists and is non-empty (project-level) — if not, the output came from user-level. tell the user which level it came from.
-- **add/update project rules**: write content to `.claude/planning-rules.md` in the current working directory.
-- **add/update user rules**: first check if `$CLAUDE_PLUGIN_DATA` is set (run `echo "$CLAUDE_PLUGIN_DATA"`). if empty, tell the user that user-level rules require the plugin to be installed from the marketplace and offer project-level instead. if set, write content to `$CLAUDE_PLUGIN_DATA/planning-rules.md`.
-- **clear project rules**: delete `.claude/planning-rules.md`.
-- **clear user rules**: if `$CLAUDE_PLUGIN_DATA` is set, delete `$CLAUDE_PLUGIN_DATA/planning-rules.md`. if not set, tell the user user-level rules are not available.
+- **show**: run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-rules.sh planning-rules.md ${CLAUDE_PLUGIN_DATA}` and display the output (empty → no rules configured; project-level `.claude/planning-rules.md` wins over user-level `$CLAUDE_PLUGIN_DATA/planning-rules.md`).
+- **add/update**: write to `.claude/planning-rules.md` (project) or `$CLAUDE_PLUGIN_DATA/planning-rules.md` (user — requires the plugin installed from the marketplace; if `$CLAUDE_PLUGIN_DATA` is unset, offer project-level instead).
+- **clear**: delete the corresponding file.
 
-project-level rules (`.claude/planning-rules.md`) take precedence over user-level rules (`$CLAUDE_PLUGIN_DATA/planning-rules.md`). when both non-empty files exist, only project-level rules are loaded. empty files are treated as absent and fall through to the next level. see `${CLAUDE_PLUGIN_ROOT}/references/custom-rules.md` for full documentation on the rules mechanism.
+see `${CLAUDE_PLUGIN_ROOT}/references/custom-rules.md` for full documentation on the rules mechanism.
 
 **CRITICAL: this skill must NEVER modify its own files (commands, skills, agents, scripts, references, hooks, plugin.json). the ONLY files it may create or modify for rules management are `.claude/planning-rules.md` and `$CLAUDE_PLUGIN_DATA/planning-rules.md`. if the user asks to change the skill's behavior, create a plan for it — do not edit skill files directly.**
 
@@ -43,29 +41,31 @@ before asking questions, understand what the user is working on:
    - "migrate to Z" / "upgrade W" → migration plan
    - generic request → explore current work
 
-2. **gather relevant context quickly** — use direct tool calls (Read, Glob, Grep), NOT an Explore agent. keep discovery under 30 seconds:
+2. **gather relevant context quickly** — use direct tool calls (Grep, Glob, Read), NOT an Explore agent. keep discovery under 30 seconds. prefer Grep for discovery and read at most ONE full file as a style exemplar:
+
+   **conventions first** — consult `CLAUDE.md` and `.claude/planning-rules.md` (if present) as the primary source of code style, naming, and patterns. these are more reliable than incidental file reads.
 
    **for feature development:**
    - glob for files matching the feature area (e.g., `**/*auth*`, `**/*cache*`)
-   - read 1-3 most relevant files to understand existing patterns
-   - check project structure with a quick `ls` of key directories
+   - grep for names, signatures, and existing patterns in the area (use `-A/-B` context when idiom matters)
+   - read at most ONE canonical file fully as a style/pattern exemplar
 
    **for bug fixing:**
    - grep for error messages or function names mentioned in the request
-   - read the specific file(s) involved
+   - read the specific file(s) involved (the fix target — this is necessary, not exemplar reading)
    - check `git log --oneline -5` for recent changes
 
    **for refactoring/migration:**
    - glob for files matching the area being refactored
-   - read 2-3 key files to understand current structure
-   - grep for imports/references to identify dependencies
+   - grep for imports/references to identify dependencies and current structure
+   - read at most ONE key file fully as an exemplar
 
    **for generic/unclear requests:**
    - check `git status` and `git log --oneline -5`
    - read README.md or CLAUDE.md for project overview
    - `ls` the top-level directory structure
 
-   **CRITICAL: do NOT launch an Explore agent or read more than 5 files in this step. the goal is a quick scan, not exhaustive analysis. if more context is needed, ask the user in step 1.**
+   **CRITICAL: do NOT launch an Explore agent. prefer grep for discovery; read at most ONE full file as a style exemplar (bug fixing may also read the specific buggy file). rely on CLAUDE.md / planning-rules.md for conventions. the goal is a quick scan, not exhaustive analysis — if more context is needed, ask the user in step 1.**
 
 3. **synthesize findings** into a brief context summary (3-5 bullet points):
    - what the project is and primary language/framework
@@ -74,33 +74,20 @@ before asking questions, understand what the user is working on:
 
 ## step 1: present context and ask focused questions
 
-show the discovered context, then ask questions **one at a time** using the AskUserQuestion tool:
+show the discovered context, then gather the planning inputs:
 
 "based on your request, i found: [context summary]"
 
-**ask questions one at a time (do not overwhelm with multiple questions):**
+**batch the context questions into a single AskUserQuestion call** (up to 4 questions at once) — do NOT ask them as separate turns:
 
-1. **plan purpose**: use AskUserQuestion - "what is the main goal?"
-   - provide multiple choice with suggested answer based on discovered intent
-   - wait for response before next question
+1. **plan purpose** — "what is the main goal?" (multiple choice, suggested answer based on discovered intent)
+2. **scope** — "which components/files are involved?" (multiple choice, suggested discovered files/areas)
+3. **constraints** — "any specific requirements or limitations?" (can be open-ended)
+4. **testing approach** — "TDD or regular?" (options: "TDD (tests first)" / "Regular (code first, then tests)"; store preference for implementation)
 
-2. **scope**: use AskUserQuestion - "which components/files are involved?"
-   - provide multiple choice with suggested discovered files/areas
-   - wait for response before next question
+**plan title**: do NOT ask as a separate question — derive a short descriptive title from the intent/answers and show it when creating the file (step 2).
 
-3. **constraints**: use AskUserQuestion - "any specific requirements or limitations?"
-   - can be open-ended if constraints vary widely
-   - wait for response before next question
-
-4. **testing approach**: use AskUserQuestion - "do you prefer TDD or regular approach?"
-   - options: "TDD (tests first)" and "Regular (code first, then tests)"
-   - store preference for reference during implementation
-   - wait for response before next question
-
-5. **plan title**: use AskUserQuestion - "short descriptive title?"
-   - provide suggested name based on intent
-
-after all questions answered, synthesize responses into plan context.
+after answers are collected, synthesize them into plan context.
 
 ## step 1.5: explore approaches
 
@@ -207,14 +194,9 @@ Task structure guidelines:
 - Use specific descriptive names, not generic "[Core Logic]" or "[Implementation]"
 - Each task MUST have a **Files:** block listing files to Create/Modify (before checkboxes)
 - Aim for ~5 checkboxes per task (more is OK if logically atomic)
-- **CRITICAL: Each task MUST end with writing/updating tests before moving to next**
-  - tests are not optional - they are a required deliverable of every task
-  - write tests for all NEW code added in this task
-  - write tests for all MODIFIED code in this task
-  - include both success and error scenarios in tests
-  - list tests as SEPARATE checklist items, not bundled with implementation
+- Tests are a required deliverable of every task — list them as SEPARATE checklist items (see Development Approach for the full rule)
 
-Example (NOTICE: Files block + tests as separate checklist items):
+Example (Files block + tests as separate checklist items):
 
 ### Task 1: Add password hashing utility
 
@@ -226,21 +208,7 @@ Example (NOTICE: Files block + tests as separate checklist items):
 - [ ] implement bcrypt-based hashing with configurable cost
 - [ ] write tests for HashPassword (success + error cases)
 - [ ] write tests for VerifyPassword (success + error cases)
-- [ ] run tests - must pass before task 2
-
-### Task 2: Add user registration endpoint
-
-**Files:**
-- Create: `src/api/users`
-- Modify: `src/api/router`
-- Create: `src/api/users_test`
-
-- [ ] create `POST /api/users` handler in `src/api/users`
-- [ ] add input validation (email format, password strength)
-- [ ] integrate with password hashing utility
-- [ ] write tests for handler success case with table-driven cases
-- [ ] write tests for handler error cases (invalid input, missing fields)
-- [ ] run tests - must pass before task 3
+- [ ] run tests - must pass before next task
 -->
 
 ### Task 1: [specific name - what this task accomplishes]
@@ -345,50 +313,19 @@ then use AskUserQuestion:
 
 ## execution enforcement
 
-**CRITICAL testing rules during implementation:**
+applies when implementing in-session (the "Implement → Interactive" path); `/planning:exec` enforces its own rules.
 
-1. **after completing code changes in a task**:
-   - STOP before moving to next task
-   - add tests for all new functionality
-   - update tests for modified functionality
-   - run project test command
-   - mark completed items with `[x]` in plan file
-
-2. **if tests fail**:
-   - fix the failures before proceeding
-   - do NOT move to next task with failing tests
-   - do NOT skip test writing
-
-3. **only proceed to next task when**:
-   - all task items completed and marked `[x]`
-   - tests written/updated
-   - all tests passing
-
-4. **plan tracking during implementation**:
-   - update checkboxes immediately when tasks complete
-   - add ➕ prefix for newly discovered tasks
-   - add ⚠️ prefix for blockers
-   - modify plan if scope changes significantly
-
-5. **on completion**:
-   - verify all checkboxes marked
-   - run final test suite
-   - move plan to `docs/plans/completed/`
-   - create directory if needed: `mkdir -p docs/plans/completed`
-
-6. **partial implementation exception**:
-   - if a task provides partial implementation where tests cannot pass until a later task:
-     - still write the tests as part of this task (required)
-     - add TODO comment in test code explaining the dependency
-     - mark the test checkbox as completed with note: `[x] write tests ... (fails until Task X)`
-     - do NOT skip test writing or defer until later
-   - when the dependent task completes, remove the TODO comment and verify tests pass
+- per task: complete code → add/update tests → run the project test command → mark items `[x]` in the plan file. do NOT move on with failing tests or skipped tests.
+- only proceed to the next task when all its items are `[x]`, tests are written, and all tests pass.
+- track during work: `[x]` for done, `➕` for newly discovered tasks, `⚠️` for blockers; update the plan if scope changes.
+- partial implementation: if tests cannot pass until a later task, still write them now, add a TODO comment noting the dependency, and mark `[x] write tests ... (fails until Task X)`; clear the TODO and verify once the dependency lands.
+- on completion: verify all checkboxes, run the full test suite, move the plan to `docs/plans/completed/` (`mkdir -p` if needed).
 
 this ensures each task is solid before building on top of it.
 
 ## key principles
 
-- **one question at a time** - do not overwhelm user with multiple questions in a single message
+- **batch context questions, then one at a time** - gather step 1 context inputs in a single AskUserQuestion call; for approach selection (1.5) and next steps (3), ask one question at a time
 - **multiple choice preferred** - easier to answer than open-ended when possible
 - **DRY, YAGNI ruthlessly** - avoid unnecessary duplication and features, keep scope minimal (but prefer duplication over premature abstraction when it reduces coupling)
 - **lead with recommendation** - have an opinion, explain why, but let user decide
